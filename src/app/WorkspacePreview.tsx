@@ -71,7 +71,7 @@ const loadPomodoro = (): StoredPomodoro => {
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
 const isValidDate = (value: unknown) => typeof value === "string" && !Number.isNaN(Date.parse(value));
 const isValidDateKey = (value: unknown) => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T12:00:00`));
-const isHexColor = (value: unknown) => typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value);
+const isHexColor = (value: unknown): value is string => typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value);
 const normalizeScheduledAt = (value: string) => value.replace(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}):00$/, "$1");
 const recurrenceRank = (recurrence: Recurrence | undefined) => recurrence === "daily" ? 1 : recurrence === "weekly" ? 2 : recurrence === "monthly" ? 3 : recurrence === "yearly" ? 4 : 0;
 const taskModes: TaskMode[] = ["one-time", "recurring", "deadline"];
