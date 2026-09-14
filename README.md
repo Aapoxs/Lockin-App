@@ -46,4 +46,4 @@ Keeping v1 local-only is deliberate: it reduces attack surface, CPU/RAM use, and
 
 ## License
 
-Lockin Board is free to use for personal, non-commercial purposes under the [Lockin Board Personal Use License](LICENSE). The repository is source-visible, not open source: you may not reuse, redistribute, modify, or commercialize the code or a substantially similar product without written permission.
+Lockin Board is available under the [Lockin Board Non-Commercial License](LICENSE). You may use, share, and modify it, but may not commercialize it or a substantially similar product.
