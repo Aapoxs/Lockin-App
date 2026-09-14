@@ -2,7 +2,7 @@
 
 Lockin Board is a private, local-first **Progressive Web App** for organizing tasks in folders and Kanban boards, then completing them with a configurable Pomodoro timer.
 
-For testing and private usage: https://lockinboard.netlify.app/
+For testing and private usage: [https://lockinboard.netlify.app/](https://lockinboard.netlify.app/)
 
 ## Development setup
 
@@ -34,7 +34,7 @@ Build an offline-first PWA with **React + TypeScript + IndexedDB**.
 - IndexedDB saves the complete workspace atomically after edits; the app requests persistent browser storage where the browser supports it.
 - Portable JSON backups protect against browser-profile resets, manual site-data clearing, or moving to a different laptop.
 
-See [the product specification](docs/01-product-spec.md), [architecture](docs/02-technical-architecture.md), [implementation roadmap](docs/03-implementation-roadmap.md), and [session handoff instructions](docs/04-session-handoff.md).
+See [the product specification](docs/01-product-spec.md) and [architecture](docs/02-technical-architecture.md).
 
 ## Non-goals for v1
 
@@ -43,7 +43,3 @@ See [the product specification](docs/01-product-spec.md), [architecture](docs/02
 - Third-party task integrations.
 
 Keeping v1 local-only is deliberate: it reduces attack surface, CPU/RAM use, and complexity.
-
-## License
-
-Lockin Board is available under the [Lockin Board Non-Commercial License](LICENSE). You may use, share, and modify it, but may not commercialize it or a substantially similar product.
