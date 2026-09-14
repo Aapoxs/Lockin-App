@@ -218,9 +218,12 @@ export function WorkspacePreview() {
       if (Array.isArray(snapshot?.folders)) setFolders(snapshot.folders);
       if (Array.isArray(snapshot?.calendarEntries)) setCalendarEntries(snapshot.calendarEntries.map((entry) => ({ ...entry, scheduledAt: normalizeScheduledAt(entry.scheduledAt) })));
       if (Array.isArray(snapshot?.focusSessions)) setFocusSessions(snapshot.focusSessions);
-      if (typeof snapshot?.preferences?.showAllRecurringUpNext === "boolean") setShowAllRecurringUpNext(snapshot.preferences.showAllRecurringUpNext);
-      if (isHexColor(snapshot?.preferences?.themeMain)) setThemeMain(snapshot.preferences.themeMain);
-      if (isHexColor(snapshot?.preferences?.themeText)) setThemeText(snapshot.preferences.themeText);
+      const preferences = snapshot?.preferences;
+      if (typeof preferences?.showAllRecurringUpNext === "boolean") setShowAllRecurringUpNext(preferences.showAllRecurringUpNext);
+      const savedThemeMain = preferences?.themeMain;
+      const savedThemeText = preferences?.themeText;
+      if (isHexColor(savedThemeMain)) setThemeMain(savedThemeMain);
+      if (isHexColor(savedThemeText)) setThemeText(savedThemeText);
       setStorageStatus(persistent === true ? "Saved locally · protected from automatic cleanup" : "Saved locally · export backups regularly");
     }).catch(() => {
       if (isActive) setStorageStatus("Local storage is unavailable — restore or browser settings may need attention");
