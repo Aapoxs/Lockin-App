@@ -71,6 +71,8 @@ const loadPomodoro = (): StoredPomodoro => {
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
 const isValidDate = (value: unknown) => typeof value === "string" && !Number.isNaN(Date.parse(value));
 const isValidDateKey = (value: unknown) => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T12:00:00`));
+const normalizeScheduledAt = (value: string) => value.replace(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}):00$/, "$1");
+const recurrenceRank = (recurrence: Recurrence | undefined) => recurrence === "daily" ? 1 : recurrence === "weekly" ? 2 : recurrence === "monthly" ? 3 : recurrence === "yearly" ? 4 : 0;
 const taskModes: TaskMode[] = ["one-time", "recurring", "deadline"];
 const taskStatuses: TaskStatus[] = ["active", "completed"];
 const recurrences: Recurrence[] = ["daily", "weekly", "monthly", "yearly"];
@@ -210,7 +212,7 @@ export function WorkspacePreview() {
       const snapshot = workspace?.snapshot as Partial<WorkspaceSnapshot> | undefined;
       if (Array.isArray(snapshot?.tasks)) setTasks(snapshot.tasks);
       if (Array.isArray(snapshot?.folders)) setFolders(snapshot.folders);
-      if (Array.isArray(snapshot?.calendarEntries)) setCalendarEntries(snapshot.calendarEntries);
+      if (Array.isArray(snapshot?.calendarEntries)) setCalendarEntries(snapshot.calendarEntries.map((entry) => ({ ...entry, scheduledAt: normalizeScheduledAt(entry.scheduledAt) })));
       if (Array.isArray(snapshot?.focusSessions)) setFocusSessions(snapshot.focusSessions);
       if (typeof snapshot?.preferences?.showAllRecurringUpNext === "boolean") setShowAllRecurringUpNext(snapshot.preferences.showAllRecurringUpNext);
       setStorageStatus(persistent === true ? "Saved locally · protected from automatic cleanup" : "Saved locally · export backups regularly");
@@ -244,9 +246,9 @@ export function WorkspacePreview() {
           let occurrence = new Date(latest.scheduledAt);
           while (occurrence < horizon) {
             occurrence = advanceRecurringDate(occurrence, recurrence);
-            const scheduledAt = `${toDateKey(occurrence)}T${String(occurrence.getHours()).padStart(2, "0")}:${String(occurrence.getMinutes()).padStart(2, "0")}:00`;
+            const scheduledAt = `${toDateKey(occurrence)}T${String(occurrence.getHours()).padStart(2, "0")}:${String(occurrence.getMinutes()).padStart(2, "0")}`;
             if (!isWithinRepeatLimit(scheduledAt, latest.repeatUntil)) break;
-            if (!current.some((entry) => entry.taskId === task.id && entry.scheduledAt === scheduledAt) && !additions.some((entry) => entry.taskId === task.id && entry.scheduledAt === scheduledAt)) additions.push({ id: crypto.randomUUID(), taskId: task.id, seriesId: latest.seriesId, recurrence, repeatUntil: latest.repeatUntil, scheduledAt, status: "scheduled" });
+            if (!current.some((entry) => calendarSeriesKey(entry) === calendarSeriesKey(latest) && normalizeScheduledAt(entry.scheduledAt) === scheduledAt) && !additions.some((entry) => calendarSeriesKey(entry) === calendarSeriesKey(latest) && normalizeScheduledAt(entry.scheduledAt) === scheduledAt)) additions.push({ id: crypto.randomUUID(), taskId: task.id, seriesId: latest.seriesId, recurrence, repeatUntil: latest.repeatUntil, scheduledAt, status: "scheduled" });
           }
         });
       });
@@ -274,6 +276,15 @@ export function WorkspacePreview() {
     observer.observe(calendar);
     return () => observer.disconnect();
   }, [activePage, calendarView]);
+
+  useEffect(() => {
+    const closeCalendarEntryMenu = (event: PointerEvent) => {
+      if (event.target instanceof Element && event.target.closest(".calendar-event-settings")) return;
+      setOpenCalendarEntryMenuId(null);
+    };
+    document.addEventListener("pointerdown", closeCalendarEntryMenu);
+    return () => document.removeEventListener("pointerdown", closeCalendarEntryMenu);
+  }, []);
 
   useEffect(() => {
     if (!isPomodoroRunning) return;
@@ -326,9 +337,19 @@ export function WorkspacePreview() {
 
   const canScheduleTaskAt = (taskId: string, scheduledAt: string, entries: CalendarEntry[]) => {
     const task = tasks.find((candidate) => candidate.id === taskId);
-    if (!task || entries.some((entry) => entry.taskId === taskId && entry.status !== "cleared" && entry.scheduledAt === scheduledAt)) return false;
+    if (!task) return false;
+    const recurrence = task.mode === "recurring" ? task.recurrence : undefined;
+    const hasExactConflict = entries.some((entry) => {
+      if (entry.taskId !== taskId || entry.status === "cleared" || normalizeScheduledAt(entry.scheduledAt) !== normalizeScheduledAt(scheduledAt)) return false;
+      const existingRecurrence = calendarEntryRecurrence(entry, task);
+      return !recurrence || !existingRecurrence || recurrenceRank(existingRecurrence) <= recurrenceRank(recurrence);
+    });
+    if (hasExactConflict) return false;
     const time = scheduledAt.slice(11, 16);
-    return !entries.some((entry) => entry.taskId === taskId && entry.status === "scheduled" && calendarEntryRecurrence(entry, task) && entry.scheduledAt.slice(11, 16) === time && isWithinRepeatLimit(scheduledAt, entry.repeatUntil));
+    return !entries.some((entry) => {
+      const existingRecurrence = calendarEntryRecurrence(entry, task);
+      return entry.taskId === taskId && entry.status === "scheduled" && Boolean(recurrence && existingRecurrence) && recurrenceRank(existingRecurrence) <= recurrenceRank(recurrence) && entry.scheduledAt.slice(11, 16) === time && isWithinRepeatLimit(scheduledAt, entry.repeatUntil);
+    });
   };
 
   const scheduleTask = (taskId: string, dateKey: string, hour: number) => {
@@ -347,7 +368,7 @@ export function WorkspacePreview() {
       let occurrence = new Date(scheduledAt);
       for (let index = 1; index < count; index += 1) {
         occurrence = advanceRecurringDate(occurrence, recurrence);
-        const nextScheduledAt = `${toDateKey(occurrence)}T${String(occurrence.getHours()).padStart(2, "0")}:${String(occurrence.getMinutes()).padStart(2, "0")}:00`;
+        const nextScheduledAt = `${toDateKey(occurrence)}T${String(occurrence.getHours()).padStart(2, "0")}:${String(occurrence.getMinutes()).padStart(2, "0")}`;
         if (!isWithinRepeatLimit(nextScheduledAt, repeatUntil)) break;
         entries.push({ id: crypto.randomUUID(), taskId, seriesId, recurrence, repeatUntil, scheduledAt: nextScheduledAt, status: "scheduled" });
       }
@@ -459,7 +480,7 @@ export function WorkspacePreview() {
   };
 
   const setCalendarSlotDragPreview = (event: DragEvent<HTMLElement>) => {
-    const slot = weekCalendarRef.current?.querySelector<HTMLElement>(".hour-slot");
+    const slot = calendarView === "month" ? document.querySelector<HTMLElement>(".month-day") : weekCalendarRef.current?.querySelector<HTMLElement>(".hour-slot");
     if (!slot) return;
     const slotBounds = slot.getBoundingClientRect();
     const preview = event.currentTarget.cloneNode(true) as HTMLElement;
@@ -613,9 +634,10 @@ export function WorkspacePreview() {
   const calendarTrayTasks = calendarTrayFolder ? activeTasks.filter((task) => task.destination === calendarTrayFolder) : [];
   const storedScheduledTasks = calendarEntries.filter((entry) => entry.status !== "cleared").flatMap((entry) => {
     const task = tasks.find((candidate) => candidate.id === entry.taskId);
-    return task ? [{ entry, task }] : [];
+    const normalizedEntry = entry.scheduledAt === normalizeScheduledAt(entry.scheduledAt) ? entry : { ...entry, scheduledAt: normalizeScheduledAt(entry.scheduledAt) };
+    return task ? [{ entry: normalizedEntry, task }] : [];
   });
-  const storedEntryKeys = new Set(calendarEntries.map((entry) => `${entry.taskId}|${entry.scheduledAt}`));
+  const storedEntryKeys = new Set(calendarEntries.map((entry) => `${calendarSeriesKey(entry)}|${normalizeScheduledAt(entry.scheduledAt)}`));
   const recurrenceProjectionEnd = new Date(Math.max(Date.now(), calendarDate.getTime()));
   recurrenceProjectionEnd.setFullYear(recurrenceProjectionEnd.getFullYear() + 2);
   const projectedRecurringTasks = tasks.filter((task) => task.status === "active").flatMap((task) => [...groupCalendarEntriesBySeries(calendarEntries.filter((entry) => entry.taskId === task.id)).entries()].flatMap(([seriesKey, seriesEntries]) => {
@@ -626,9 +648,9 @@ export function WorkspacePreview() {
     let occurrence = new Date(anchor.scheduledAt);
     let safety = 0;
     while (occurrence <= recurrenceProjectionEnd && safety < 5000) {
-      const scheduledAt = `${toDateKey(occurrence)}T${String(occurrence.getHours()).padStart(2, "0")}:${String(occurrence.getMinutes()).padStart(2, "0")}:00`;
+      const scheduledAt = `${toDateKey(occurrence)}T${String(occurrence.getHours()).padStart(2, "0")}:${String(occurrence.getMinutes()).padStart(2, "0")}`;
       if (!isWithinRepeatLimit(scheduledAt, anchor.repeatUntil)) break;
-      if (!storedEntryKeys.has(`${task.id}|${scheduledAt}`)) projected.push({ entry: { id: `recurring:${seriesKey}:${scheduledAt}`, taskId: task.id, seriesId: anchor.seriesId, recurrence, repeatUntil: anchor.repeatUntil, scheduledAt, status: "scheduled" }, task });
+      if (!storedEntryKeys.has(`${seriesKey}|${scheduledAt}`)) projected.push({ entry: { id: `recurring:${seriesKey}:${scheduledAt}`, taskId: task.id, seriesId: anchor.seriesId, recurrence, repeatUntil: anchor.repeatUntil, scheduledAt, status: "scheduled" }, task });
       occurrence = advanceRecurringDate(occurrence, recurrence);
       safety += 1;
     }
@@ -638,7 +660,7 @@ export function WorkspacePreview() {
   const recurringTasksForSlot = (scheduledAt: string) => {
     const slot = new Date(scheduledAt);
     return tasks.filter((task) => task.status === "active").flatMap((task) => [...groupCalendarEntriesBySeries(calendarEntries.filter((entry) => entry.taskId === task.id)).entries()].flatMap(([seriesKey, seriesEntries]) => {
-      if (storedEntryKeys.has(`${task.id}|${scheduledAt}`)) return [];
+      if (storedEntryKeys.has(`${seriesKey}|${scheduledAt}`)) return [];
       const anchor = [...seriesEntries].sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt))[0];
       const recurrence = anchor ? calendarEntryRecurrence(anchor, task) : undefined;
       if (!anchor || !recurrence) return [];
@@ -765,11 +787,11 @@ export function WorkspacePreview() {
             <header className="calendar-page-header">
               <div><p className="eyebrow">Plan your time</p><h1 id="calendar-page-title">Calendar</h1></div>
               <div className="calendar-page-actions"><button className="calendar-clear-all" type="button" onClick={clearCalendar}>Clear calendar</button><div className="calendar-nav" aria-label="Change calendar period"><button type="button" aria-label={`Previous ${calendarPeriodName}`} onClick={() => shiftCalendarDate(-1)}>‹ Prev</button><button className="calendar-nav-today" type="button" onClick={() => setCalendarDate(new Date())}>Today</button><span aria-live="polite">{calendarPeriodLabel}</span><button type="button" aria-label={`Next ${calendarPeriodName}`} onClick={() => shiftCalendarDate(1)}>Next ›</button></div>
-                <div className="calendar-view-switch" role="tablist" aria-label="Calendar view">{(["week", "month", "year"] as CalendarView[]).map((view) => <button type="button" role="tab" aria-selected={calendarView === view} key={view} onClick={() => setCalendarView(view)}>{view[0].toUpperCase() + view.slice(1)}</button>)}</div>
+                <div className="calendar-view-switch" role="tablist" aria-label="Calendar view">{(["week", "month", "year"] as CalendarView[]).map((view) => <button type="button" role="tab" aria-selected={calendarView === view} key={view} onClick={() => { setCalendarView(view); if (view === "year") setIsCalendarTrayOpen(false); }}>{view[0].toUpperCase() + view.slice(1)}</button>)}</div>
               </div>
             </header>
             <div className={`calendar-workspace${isCalendarTrayOpen ? " calendar-workspace-tray-open" : ""}`}>
-              {isCalendarTrayOpen && <aside className="calendar-tray" aria-label="Tasks to schedule">
+              {isCalendarTrayOpen && calendarView !== "year" && <aside className="calendar-tray" aria-label="Tasks to schedule">
                 {calendarTrayFolder === null ? <>
                   <h2>Task folders</h2><p>Choose a folder to schedule tasks, or drop a scheduled task here to return it.</p>
                   <button type="button" onClick={() => setCalendarTrayFolder("Main")} onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropOn(event, "Main")}>Main <span>{mainTasks.length}</span></button>
@@ -777,11 +799,11 @@ export function WorkspacePreview() {
                 </> : <>
                   <button className="calendar-tray-back" type="button" onClick={() => setCalendarTrayFolder(null)}>← Back to folders</button>
                   <h2>{calendarTrayFolder === "Main" ? "Main" : folders.find((folder) => folder.id === calendarTrayFolder)?.name}</h2>
-                  <p>{calendarView === "week" ? "Set Repeat and Ends before dragging a task into a slot. Those settings apply to the new series only; existing series remain unchanged." : calendarView === "month" ? "Drag a task onto a day to add it at 06:00. Repeat settings apply to the new series only." : "Year view is read-only. Switch to Week or Month view to add a task."}</p>
-                  <div onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropOn(event, calendarTrayFolder)}>{calendarTrayTasks.map((task) => <article className={`calendar-task${calendarView === "year" ? " calendar-task-disabled" : ""}`} key={task.id} style={{ "--task-folder-color": calendarTaskColor(task) } as CSSProperties} draggable={calendarView !== "year"} aria-disabled={calendarView === "year"} onDragStart={(event) => dragTaskStart(event, task.id)} onDragEnd={clearDraggedTask}><strong>{task.title}</strong><span>{task.detail}</span><label className="calendar-repeat-control" onClick={(event) => event.stopPropagation()}>Repeat<select aria-label={`Repeat ${task.title}`} value={task.mode === "recurring" ? task.recurrence ?? "weekly" : "none"} onChange={(event) => setCalendarTaskRecurrence(task.id, event.target.value as Recurrence | "none")}><option value="none">Does not repeat</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></label>{task.mode === "recurring" && <label className="calendar-repeat-control" onClick={(event) => event.stopPropagation()}>New series ends<select aria-label={`Repeat limit for new ${task.title} series`} value={task.repeatLimit ?? "forever"} onChange={(event) => setCalendarTaskRepeatLimit(task.id, event.target.value as RepeatLimit)}><option value="week">This week</option><option value="month">This month</option><option value="year">This year</option><option value="forever">No end</option></select></label>}</article>)}</div>
+                  <p>{calendarView === "week" ? "Set Repeat and Ends before dragging a task into a slot. Those settings apply to the new series only; existing series remain unchanged." : "Drag a task onto a day to add it at 06:00. Repeat settings apply to the new series only."}</p>
+                  <div onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropOn(event, calendarTrayFolder)}>{calendarTrayTasks.map((task) => <article className="calendar-task" key={task.id} style={{ "--task-folder-color": calendarTaskColor(task) } as CSSProperties} draggable={calendarView === "week" || calendarView === "month"} aria-disabled={calendarView === "year"} onDragStart={(event) => dragTaskStart(event, task.id)} onDragEnd={clearDraggedTask}><strong>{task.title}</strong><span>{task.detail}</span><label className="calendar-repeat-control" onClick={(event) => event.stopPropagation()}>Repeat<select aria-label={`Repeat ${task.title}`} value={task.mode === "recurring" ? task.recurrence ?? "weekly" : "none"} onChange={(event) => setCalendarTaskRecurrence(task.id, event.target.value as Recurrence | "none")}><option value="none">Does not repeat</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></label>{task.mode === "recurring" && <label className="calendar-repeat-control" onClick={(event) => event.stopPropagation()}>New series ends<select aria-label={`Repeat limit for new ${task.title} series`} value={task.repeatLimit ?? "forever"} onChange={(event) => setCalendarTaskRepeatLimit(task.id, event.target.value as RepeatLimit)}><option value="week">This week</option><option value="month">This month</option><option value="year">This year</option><option value="forever">No end</option></select></label>}</article>)}</div>
                 </>}
               </aside>}
-              <section className="calendar-canvas">{calendarView !== "week" && <button className="calendar-task-toggle calendar-canvas-task-toggle" type="button" aria-label="Open task folders" title="Tasks to schedule" aria-expanded={isCalendarTrayOpen} onClick={toggleCalendarTray}><span /><span /><span /></button>}
+              <section className="calendar-canvas">{calendarView === "month" && <button className="calendar-task-toggle calendar-canvas-task-toggle" type="button" aria-label="Open task folders" title="Tasks to schedule" aria-expanded={isCalendarTrayOpen} onClick={toggleCalendarTray}><span /><span /><span /></button>}
                 {calendarView === "week" && <div className="week-calendar" ref={weekCalendarRef} style={{ "--visible-days": visibleWeekDays.length } as CSSProperties}>
                   <div className="week-corner"><button className="calendar-task-toggle" type="button" aria-label="Open task folders" title="Tasks to schedule" aria-expanded={isCalendarTrayOpen} onClick={toggleCalendarTray}><span /><span /><span /></button></div>
                   {visibleWeekDays.map((day) => <div className="week-day-label" key={day.key}>{day.label}<b>{day.day}</b></div>)}
@@ -790,7 +812,7 @@ export function WorkspacePreview() {
                     {visibleWeekDays.map((day) => {
                       const scheduledAt = `${day.key}T${String(hour).padStart(2, "0")}:00`;
                       return <div className="hour-slot" key={scheduledAt} onDragOver={(event) => { const taskId = draggedTaskIdRef.current ?? draggedTaskId ?? getDraggedTaskId(event); if (taskId && !canScheduleTaskAt(taskId, scheduledAt, calendarEntries)) { event.dataTransfer.dropEffect = "none"; return; } event.preventDefault(); event.dataTransfer.dropEffect = "copy"; }} onDrop={(event) => { event.preventDefault(); const taskId = getDraggedTaskId(event) || draggedTaskIdRef.current || draggedTaskId || ""; const entryId = getDraggedCalendarEntryId(event); if (taskId && canScheduleTaskAt(taskId, scheduledAt, calendarEntries)) scheduleTask(taskId, day.key, hour); if (entryId) moveCalendarEntry(entryId, day.key, hour); }}>
-                        {[...scheduledTasks.filter(({ entry }) => entry.scheduledAt === scheduledAt), ...recurringTasksForSlot(scheduledAt)].filter(({ entry }, index, entries) => entries.findIndex((candidate) => candidate.entry.taskId === entry.taskId && candidate.entry.scheduledAt === entry.scheduledAt) === index).map(({ entry, task }) => <article className={`scheduled-event${highlightedCalendarEntryId === entry.id ? " scheduled-event-highlighted" : ""}${entry.status === "completed" || task.status === "completed" ? " scheduled-event-completed" : ""}`} style={{ "--task-folder-color": calendarTaskColor(task) } as CSSProperties} draggable={entry.status === "scheduled" && task.status === "active" && !entry.id.startsWith("recurring:")} onDragStart={(event) => dragCalendarEntryStart(event, entry.id)} key={entry.id}><strong>{task.title}</strong>{entry.status === "scheduled" && task.status === "active" && calendarEntrySettings(entry, task)}<footer><span>{calendarEntryCountdown(entry)}</span>{!(entry.status === "scheduled" && task.status === "active") && !calendarEntryRecurrence(entry, task) && <button type="button" aria-label={`Reopen ${task.title}`} title="Reopen calendar block" onClick={(event) => { event.stopPropagation(); reopenCalendarEntry(entry, task); }}>↺</button>}</footer></article>)}
+                        {[...scheduledTasks.filter(({ entry }) => entry.scheduledAt === scheduledAt), ...recurringTasksForSlot(scheduledAt)].filter(({ entry }, index, entries) => entries.findIndex((candidate) => calendarSeriesKey(candidate.entry) === calendarSeriesKey(entry) && candidate.entry.scheduledAt === entry.scheduledAt) === index).map(({ entry, task }) => <article className={`scheduled-event${highlightedCalendarEntryId === entry.id ? " scheduled-event-highlighted" : ""}${entry.status === "completed" || task.status === "completed" ? " scheduled-event-completed" : ""}`} style={{ "--task-folder-color": calendarTaskColor(task) } as CSSProperties} draggable={entry.status === "scheduled" && task.status === "active" && !entry.id.startsWith("recurring:")} onDragStart={(event) => dragCalendarEntryStart(event, entry.id)} key={entry.id}><strong>{task.title}</strong>{entry.status === "scheduled" && task.status === "active" && calendarEntrySettings(entry, task)}<footer><span>{calendarEntryCountdown(entry)}</span>{!(entry.status === "scheduled" && task.status === "active") && !calendarEntryRecurrence(entry, task) && <button type="button" aria-label={`Reopen ${task.title}`} title="Reopen calendar block" onClick={(event) => { event.stopPropagation(); reopenCalendarEntry(entry, task); }}>↺</button>}</footer></article>)}
                       </div>;
                     })}
                   </Fragment>)}
