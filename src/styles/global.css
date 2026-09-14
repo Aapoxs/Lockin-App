@@ -262,6 +262,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline-color:#fff}
 .hour-slot .scheduled-event{padding:7px 8px;border-radius:4px;font-size:14px;font-weight:650;line-height:1.32}
 .month-day .scheduled-event{padding:5px 6px;border-radius:4px;font-size:14px;font-weight:650;line-height:1.32}
 .calendar-task{min-height:47px;border-radius:4px}.calendar-task strong{font-size:14px;font-weight:650;line-height:1.32}.calendar-task-disabled{cursor:not-allowed;opacity:.55}
+.calendar-slot-drag-preview{position:fixed;top:-10000px;left:-10000px;display:block;min-height:0!important;margin:0;padding:7px 8px!important;overflow:hidden;border-radius:4px!important;pointer-events:none}.calendar-slot-drag-preview>span,.calendar-slot-drag-preview .calendar-repeat-control{display:none}.calendar-slot-drag-preview strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* Main-page calendar stays deliberately quiet: dates and folder-coloured schedule markers only. */
 .main-month-section{padding:18px 18px 16px}
