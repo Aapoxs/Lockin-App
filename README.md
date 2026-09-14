@@ -2,6 +2,8 @@
 
 Lockin Board is a private, local-first **Progressive Web App** for organizing tasks in folders and Kanban boards, then completing them with a configurable Pomodoro timer.
 
+For testing and private usage: https://lockinboard.netlify.app/
+
 ## Development setup
 
 Install a current Node.js LTS release, then run:
