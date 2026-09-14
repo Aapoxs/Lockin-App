@@ -1,0 +1,12 @@
+{
+  "name": "Lockin Board",
+  "short_name": "Lockin Board",
+  "description": "A private, offline-first task and focus board.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "icons": [
+    { "src": "/focusboard.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

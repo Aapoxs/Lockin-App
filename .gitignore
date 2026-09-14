@@ -1,0 +1,6 @@
+node_modules/
+dist/
+*.log
+.env
+# Local exports can contain private task titles, notes, and calendar history.
+lockin-board-backup-*.json
