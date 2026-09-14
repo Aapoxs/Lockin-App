@@ -34,7 +34,7 @@ type CalendarEntry = {
   recurrence?: Recurrence | null;
   repeatUntil?: string;
   scheduledAt: string;
-  status: "scheduled" | "completed";
+  status: "scheduled" | "completed" | "cleared";
 };
 
 type FocusSession = { id: string; taskId: string; calendarEntryId?: string; completedAt: string; duration: number };
@@ -95,7 +95,7 @@ const isValidWorkspaceSnapshot = (value: unknown): value is WorkspaceSnapshot =>
   if (!value.tasks.every(isValidTask)) return false;
   if (!value.folders.every((folder) => isRecord(folder) && typeof folder.id === "string" && typeof folder.name === "string" && typeof folder.color === "string" && /^#[0-9a-f]{6}$/i.test(folder.color))) return false;
   const taskIds = new Set(value.tasks.map((task) => task.id));
-  if (!value.calendarEntries.every((entry) => isRecord(entry) && typeof entry.id === "string" && typeof entry.taskId === "string" && taskIds.has(entry.taskId) && (entry.seriesId === undefined || typeof entry.seriesId === "string") && (entry.recurrence === undefined || entry.recurrence === null || recurrences.includes(entry.recurrence as Recurrence)) && (entry.repeatUntil === undefined || isValidDateKey(entry.repeatUntil)) && isValidDate(entry.scheduledAt) && (entry.status === "scheduled" || entry.status === "completed"))) return false;
+  if (!value.calendarEntries.every((entry) => isRecord(entry) && typeof entry.id === "string" && typeof entry.taskId === "string" && taskIds.has(entry.taskId) && (entry.seriesId === undefined || typeof entry.seriesId === "string") && (entry.recurrence === undefined || entry.recurrence === null || recurrences.includes(entry.recurrence as Recurrence)) && (entry.repeatUntil === undefined || isValidDateKey(entry.repeatUntil)) && isValidDate(entry.scheduledAt) && (entry.status === "scheduled" || entry.status === "completed" || entry.status === "cleared"))) return false;
   if (!value.focusSessions.every((session) => isRecord(session) && typeof session.id === "string" && typeof session.taskId === "string" && taskIds.has(session.taskId) && isValidDate(session.completedAt) && typeof session.duration === "number" && Number.isFinite(session.duration) && session.duration > 0 && (session.calendarEntryId === undefined || typeof session.calendarEntryId === "string"))) return false;
   return value.preferences === undefined || (isRecord(value.preferences) && typeof value.preferences.showAllRecurringUpNext === "boolean");
 };
@@ -179,6 +179,7 @@ export function WorkspacePreview() {
   const [editTaskDeadlineHour, setEditTaskDeadlineHour] = useState(9);
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [openCalendarEntryMenuId, setOpenCalendarEntryMenuId] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
   const initialPomodoro = useRef(loadPomodoro()).current;
   const [pomodoroDurationMinutes, setPomodoroDurationMinutes] = useState(initialPomodoro.durationMinutes);
@@ -317,7 +318,7 @@ export function WorkspacePreview() {
 
   const canScheduleTaskAt = (taskId: string, scheduledAt: string, entries: CalendarEntry[]) => {
     const task = tasks.find((candidate) => candidate.id === taskId);
-    if (!task || entries.some((entry) => entry.taskId === taskId && entry.scheduledAt === scheduledAt)) return false;
+    if (!task || entries.some((entry) => entry.taskId === taskId && entry.status !== "cleared" && entry.scheduledAt === scheduledAt)) return false;
     const time = scheduledAt.slice(11, 16);
     return !entries.some((entry) => entry.taskId === taskId && entry.status === "scheduled" && calendarEntryRecurrence(entry, task) && entry.scheduledAt.slice(11, 16) === time && isWithinRepeatLimit(scheduledAt, entry.repeatUntil));
   };
@@ -363,6 +364,27 @@ export function WorkspacePreview() {
     setCalendarEntries((current) => current.map((candidate) => candidate.taskId === task.id ? { ...candidate, status: "completed" } : candidate));
     setTasks((current) => current.map((candidate) => candidate.id === task.id ? { ...candidate, status: "completed", completedAt: new Date().toISOString(), column: "Done" } : candidate));
   };
+
+  const clearCalendarSlot = (entry: CalendarEntry, task: Task) => {
+    if (!window.confirm(`Clear “${task.title}” from ${formatScheduledAt(entry.scheduledAt)}?`)) return;
+    const storedEntry = calendarEntries.find((candidate) => candidate.id === entry.id);
+    setCalendarEntries((current) => storedEntry ? current.map((candidate) => candidate.id === entry.id ? { ...candidate, status: "cleared" as const } : candidate) : [...current, { ...entry, id: crypto.randomUUID(), status: "cleared" }]);
+    setOpenCalendarEntryMenuId(null);
+  };
+
+  const clearCalendarSeries = (entry: CalendarEntry, task: Task) => {
+    if (!window.confirm(`Clear every repeat of “${task.title}”?`)) return;
+    setCalendarEntries((current) => current.filter((candidate) => calendarSeriesKey(candidate) !== calendarSeriesKey(entry)));
+    setOpenCalendarEntryMenuId(null);
+  };
+
+  const clearCalendar = () => {
+    if (!window.confirm("Clear every scheduled calendar entry and repeating series? Your tasks, folders, and focus history will remain.")) return;
+    setCalendarEntries([]);
+    setOpenCalendarEntryMenuId(null);
+  };
+
+  const calendarEntrySettings = (entry: CalendarEntry, task: Task) => <div className="calendar-event-settings"><button className="calendar-event-settings-trigger" type="button" aria-label={`Settings for ${task.title}`} aria-expanded={openCalendarEntryMenuId === entry.id} onClick={(event) => { event.stopPropagation(); setOpenCalendarEntryMenuId((current) => current === entry.id ? null : entry.id); }}>•••</button>{openCalendarEntryMenuId === entry.id && <div className="calendar-event-settings-menu" role="menu"><button type="button" role="menuitem" onClick={(event) => { event.stopPropagation(); completeCalendarEntry(entry); setOpenCalendarEntryMenuId(null); }}>Complete task</button><button type="button" role="menuitem" onClick={(event) => { event.stopPropagation(); clearCalendarSlot(entry, task); }}>Clear this time slot</button>{calendarEntryRecurrence(entry, task) && <button type="button" role="menuitem" onClick={(event) => { event.stopPropagation(); clearCalendarSeries(entry, task); }}>Clear repeating series</button>}</div>}</div>;
 
   const completeTask = (task: Task) => {
     if (calendarEntries.some((entry) => entry.taskId === task.id && calendarEntryRecurrence(entry, task))) {
@@ -580,7 +602,7 @@ export function WorkspacePreview() {
   const scheduleHours = Array.from({ length: 24 }, (_, index) => index);
   const calendarHours = [...scheduleHours.slice(6), ...scheduleHours.slice(0, 6)];
   const calendarTrayTasks = calendarTrayFolder ? activeTasks.filter((task) => task.destination === calendarTrayFolder) : [];
-  const storedScheduledTasks = calendarEntries.flatMap((entry) => {
+  const storedScheduledTasks = calendarEntries.filter((entry) => entry.status !== "cleared").flatMap((entry) => {
     const task = tasks.find((candidate) => candidate.id === entry.taskId);
     return task ? [{ entry, task }] : [];
   });
@@ -733,7 +755,7 @@ export function WorkspacePreview() {
           <section className="calendar-page" aria-labelledby="calendar-page-title">
             <header className="calendar-page-header">
               <div><p className="eyebrow">Plan your time</p><h1 id="calendar-page-title">Calendar</h1></div>
-              <div className="calendar-page-actions"><div className="calendar-nav" aria-label="Change calendar period"><button type="button" aria-label={`Previous ${calendarPeriodName}`} onClick={() => shiftCalendarDate(-1)}>‹ Prev</button><button className="calendar-nav-today" type="button" onClick={() => setCalendarDate(new Date())}>Today</button><span aria-live="polite">{calendarPeriodLabel}</span><button type="button" aria-label={`Next ${calendarPeriodName}`} onClick={() => shiftCalendarDate(1)}>Next ›</button></div>
+              <div className="calendar-page-actions"><button className="calendar-clear-all" type="button" onClick={clearCalendar}>Clear calendar</button><div className="calendar-nav" aria-label="Change calendar period"><button type="button" aria-label={`Previous ${calendarPeriodName}`} onClick={() => shiftCalendarDate(-1)}>‹ Prev</button><button className="calendar-nav-today" type="button" onClick={() => setCalendarDate(new Date())}>Today</button><span aria-live="polite">{calendarPeriodLabel}</span><button type="button" aria-label={`Next ${calendarPeriodName}`} onClick={() => shiftCalendarDate(1)}>Next ›</button></div>
                 <div className="calendar-view-switch" role="tablist" aria-label="Calendar view">{(["week", "month", "year"] as CalendarView[]).map((view) => <button type="button" role="tab" aria-selected={calendarView === view} key={view} onClick={() => setCalendarView(view)}>{view[0].toUpperCase() + view.slice(1)}</button>)}</div>
               </div>
             </header>
@@ -759,7 +781,7 @@ export function WorkspacePreview() {
                     {visibleWeekDays.map((day) => {
                       const scheduledAt = `${day.key}T${String(hour).padStart(2, "0")}:00`;
                       return <div className="hour-slot" key={scheduledAt} onDragOver={(event) => { const taskId = draggedTaskIdRef.current ?? draggedTaskId ?? getDraggedTaskId(event); if (taskId && !canScheduleTaskAt(taskId, scheduledAt, calendarEntries)) { event.dataTransfer.dropEffect = "none"; return; } event.preventDefault(); event.dataTransfer.dropEffect = "copy"; }} onDrop={(event) => { event.preventDefault(); const taskId = getDraggedTaskId(event) || draggedTaskIdRef.current || draggedTaskId || ""; const entryId = getDraggedCalendarEntryId(event); if (taskId && canScheduleTaskAt(taskId, scheduledAt, calendarEntries)) scheduleTask(taskId, day.key, hour); if (entryId) moveCalendarEntry(entryId, day.key, hour); }}>
-                        {[...scheduledTasks.filter(({ entry }) => entry.scheduledAt === scheduledAt), ...recurringTasksForSlot(scheduledAt)].filter(({ entry }, index, entries) => entries.findIndex((candidate) => candidate.entry.taskId === entry.taskId && candidate.entry.scheduledAt === entry.scheduledAt) === index).map(({ entry, task }) => <article className={`scheduled-event${highlightedCalendarEntryId === entry.id ? " scheduled-event-highlighted" : ""}${entry.status === "completed" || task.status === "completed" ? " scheduled-event-completed" : ""}`} style={{ "--task-folder-color": calendarTaskColor(task) } as CSSProperties} draggable={entry.status === "scheduled" && task.status === "active" && !entry.id.startsWith("recurring:")} onDragStart={(event) => dragCalendarEntryStart(event, entry.id)} key={entry.id}><strong>{task.title}</strong><footer><span>{calendarEntryCountdown(entry)}</span>{entry.status === "scheduled" && task.status === "active" ? <button type="button" aria-label={`Complete ${task.title}`} onClick={(event) => { event.stopPropagation(); completeCalendarEntry(entry); }}>✓</button> : !calendarEntryRecurrence(entry, task) && <button type="button" aria-label={`Reopen ${task.title}`} title="Reopen calendar block" onClick={(event) => { event.stopPropagation(); reopenCalendarEntry(entry, task); }}>↺</button>}</footer></article>)}
+                        {[...scheduledTasks.filter(({ entry }) => entry.scheduledAt === scheduledAt), ...recurringTasksForSlot(scheduledAt)].filter(({ entry }, index, entries) => entries.findIndex((candidate) => candidate.entry.taskId === entry.taskId && candidate.entry.scheduledAt === entry.scheduledAt) === index).map(({ entry, task }) => <article className={`scheduled-event${highlightedCalendarEntryId === entry.id ? " scheduled-event-highlighted" : ""}${entry.status === "completed" || task.status === "completed" ? " scheduled-event-completed" : ""}`} style={{ "--task-folder-color": calendarTaskColor(task) } as CSSProperties} draggable={entry.status === "scheduled" && task.status === "active" && !entry.id.startsWith("recurring:")} onDragStart={(event) => dragCalendarEntryStart(event, entry.id)} key={entry.id}><strong>{task.title}</strong>{entry.status === "scheduled" && task.status === "active" && calendarEntrySettings(entry, task)}<footer><span>{calendarEntryCountdown(entry)}</span>{!(entry.status === "scheduled" && task.status === "active") && !calendarEntryRecurrence(entry, task) && <button type="button" aria-label={`Reopen ${task.title}`} title="Reopen calendar block" onClick={(event) => { event.stopPropagation(); reopenCalendarEntry(entry, task); }}>↺</button>}</footer></article>)}
                       </div>;
                     })}
                   </Fragment>)}
@@ -768,7 +790,7 @@ export function WorkspacePreview() {
                   {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => <b key={day}>{day}</b>)}
                   {monthDays.map((day) => <div className={`month-day${day.inMonth ? "" : " month-day-muted"}`} key={day.key} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }} onDrop={(event) => { event.preventDefault(); const entryId = getDraggedCalendarEntryId(event); if (entryId) moveCalendarEntry(entryId, day.key, 9); }}>
                     <span>{day.day}</span>
-                    {scheduledTasks.filter(({ entry }) => entry.scheduledAt.startsWith(day.key)).map(({ entry, task }) => <article className={`scheduled-event${entry.status === "completed" || task.status === "completed" ? " scheduled-event-completed" : ""}`} style={{ "--task-folder-color": calendarTaskColor(task) } as CSSProperties} draggable={entry.status === "scheduled" && task.status === "active" && !entry.id.startsWith("recurring:")} onDragStart={(event) => dragCalendarEntryStart(event, entry.id)} key={entry.id}><strong>{task.title}</strong><footer><span>{calendarEntryCountdown(entry)}</span>{entry.status === "scheduled" && task.status === "active" ? <button type="button" aria-label={`Complete ${task.title}`} onClick={(event) => { event.stopPropagation(); completeCalendarEntry(entry); }}>✓</button> : !calendarEntryRecurrence(entry, task) && <button type="button" aria-label={`Reopen ${task.title}`} title="Reopen calendar block" onClick={(event) => { event.stopPropagation(); reopenCalendarEntry(entry, task); }}>↺</button>}</footer></article>)}
+                    {scheduledTasks.filter(({ entry }) => entry.scheduledAt.startsWith(day.key)).map(({ entry, task }) => <article className={`scheduled-event${entry.status === "completed" || task.status === "completed" ? " scheduled-event-completed" : ""}`} style={{ "--task-folder-color": calendarTaskColor(task) } as CSSProperties} draggable={entry.status === "scheduled" && task.status === "active" && !entry.id.startsWith("recurring:")} onDragStart={(event) => dragCalendarEntryStart(event, entry.id)} key={entry.id}><strong>{task.title}</strong>{entry.status === "scheduled" && task.status === "active" && calendarEntrySettings(entry, task)}<footer><span>{calendarEntryCountdown(entry)}</span>{!(entry.status === "scheduled" && task.status === "active") && !calendarEntryRecurrence(entry, task) && <button type="button" aria-label={`Reopen ${task.title}`} title="Reopen calendar block" onClick={(event) => { event.stopPropagation(); reopenCalendarEntry(entry, task); }}>↺</button>}</footer></article>)}
                   </div>)}
                 </div>}
                 {calendarView === "year" && <div className="year-calendar">{yearMonths.map((month) => {
