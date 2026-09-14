@@ -34,7 +34,7 @@ Build an offline-first PWA with **React + TypeScript + IndexedDB**.
 - IndexedDB saves the complete workspace atomically after edits; the app requests persistent browser storage where the browser supports it.
 - Portable JSON backups protect against browser-profile resets, manual site-data clearing, or moving to a different laptop.
 
-See [the product specification](docs/01-product-spec.md), [architecture](docs/02-technical-architecture.md), [implementation roadmap](docs/03-implementation-roadmap.md), and [session handoff instructions](docs/04-session-handoff.md).
+See [the product specification](docs/01-product-spec.md), [architecture](docs/02-technical-architecture.md)
 
 ## Non-goals for v1
 
