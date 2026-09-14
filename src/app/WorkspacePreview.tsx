@@ -7,7 +7,7 @@ type Page = "main" | "calendar" | "pomodoro" | "kanban" | "completed";
 type CalendarView = "week" | "month" | "year";
 type TaskMode = "one-time" | "recurring" | "deadline";
 type TaskStatus = "active" | "completed";
-type Recurrence = "daily" | "weekly" | "monthly";
+type Recurrence = "daily" | "weekly" | "monthly" | "yearly";
 type RepeatLimit = "week" | "month" | "year" | "forever";
 
 type Task = {
@@ -73,7 +73,7 @@ const isValidDate = (value: unknown) => typeof value === "string" && !Number.isN
 const isValidDateKey = (value: unknown) => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T12:00:00`));
 const taskModes: TaskMode[] = ["one-time", "recurring", "deadline"];
 const taskStatuses: TaskStatus[] = ["active", "completed"];
-const recurrences: Recurrence[] = ["daily", "weekly", "monthly"];
+const recurrences: Recurrence[] = ["daily", "weekly", "monthly", "yearly"];
 const repeatLimits: RepeatLimit[] = ["week", "month", "year", "forever"];
 const columns: Column[] = ["To do", "Doing", "Done"];
 const tones: Task["tone"][] = ["warm", "cool", "neutral", "focus", "done"];
@@ -137,11 +137,19 @@ const advanceRecurringDate = (date: Date, recurrence: Recurrence) => {
   const next = new Date(date);
   if (recurrence === "daily") next.setDate(next.getDate() + 1);
   else if (recurrence === "weekly") next.setDate(next.getDate() + 7);
-  else {
+  else if (recurrence === "monthly") {
     const day = next.getDate();
     next.setDate(1);
     next.setMonth(next.getMonth() + 1);
     const lastDay = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+    next.setDate(Math.min(day, lastDay));
+  } else {
+    const month = next.getMonth();
+    const day = next.getDate();
+    next.setDate(1);
+    next.setFullYear(next.getFullYear() + 1);
+    next.setMonth(month);
+    const lastDay = new Date(next.getFullYear(), month + 1, 0).getDate();
     next.setDate(Math.min(day, lastDay));
   }
   return next;
@@ -334,7 +342,7 @@ export function WorkspacePreview() {
       const repeatUntil = recurrence ? repeatLimitEnd(scheduledAt, task.repeatLimit ?? "forever") : undefined;
       const first: CalendarEntry = { id: crypto.randomUUID(), taskId, seriesId, recurrence, repeatUntil, scheduledAt, status: "scheduled" };
       if (!recurrence) return [...current, first];
-      const count = recurrence === "daily" ? 366 : recurrence === "weekly" ? 53 : 13;
+      const count = recurrence === "daily" ? 366 : recurrence === "weekly" ? 53 : recurrence === "monthly" ? 13 : 2;
       const entries = [first];
       let occurrence = new Date(scheduledAt);
       for (let index = 1; index < count; index += 1) {
@@ -769,7 +777,7 @@ export function WorkspacePreview() {
                   <button className="calendar-tray-back" type="button" onClick={() => setCalendarTrayFolder(null)}>← Back to folders</button>
                   <h2>{calendarTrayFolder === "Main" ? "Main" : folders.find((folder) => folder.id === calendarTrayFolder)?.name}</h2>
                   <p>{calendarView === "week" ? "Set Repeat and Ends before dragging a task into a slot. Those settings apply to the new series only; existing series remain unchanged." : "Switch to Week view to add a task to the calendar."}</p>
-                  <div onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropOn(event, calendarTrayFolder)}>{calendarTrayTasks.map((task) => <article className={`calendar-task${calendarView === "week" ? "" : " calendar-task-disabled"}`} key={task.id} style={{ "--task-folder-color": calendarTaskColor(task) } as CSSProperties} draggable={calendarView === "week"} aria-disabled={calendarView !== "week"} onDragStart={(event) => dragTaskStart(event, task.id)} onDragEnd={clearDraggedTask}><strong>{task.title}</strong><span>{task.detail}</span><label className="calendar-repeat-control" onClick={(event) => event.stopPropagation()}>Repeat<select aria-label={`Repeat ${task.title}`} value={task.mode === "recurring" ? task.recurrence ?? "weekly" : "none"} onChange={(event) => setCalendarTaskRecurrence(task.id, event.target.value as Recurrence | "none")}><option value="none">Does not repeat</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></label>{task.mode === "recurring" && <label className="calendar-repeat-control" onClick={(event) => event.stopPropagation()}>New series ends<select aria-label={`Repeat limit for new ${task.title} series`} value={task.repeatLimit ?? "forever"} onChange={(event) => setCalendarTaskRepeatLimit(task.id, event.target.value as RepeatLimit)}><option value="week">This week</option><option value="month">This month</option><option value="year">This year</option><option value="forever">No end</option></select></label>}</article>)}</div>
+                  <div onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropOn(event, calendarTrayFolder)}>{calendarTrayTasks.map((task) => <article className={`calendar-task${calendarView === "week" ? "" : " calendar-task-disabled"}`} key={task.id} style={{ "--task-folder-color": calendarTaskColor(task) } as CSSProperties} draggable={calendarView === "week"} aria-disabled={calendarView !== "week"} onDragStart={(event) => dragTaskStart(event, task.id)} onDragEnd={clearDraggedTask}><strong>{task.title}</strong><span>{task.detail}</span><label className="calendar-repeat-control" onClick={(event) => event.stopPropagation()}>Repeat<select aria-label={`Repeat ${task.title}`} value={task.mode === "recurring" ? task.recurrence ?? "weekly" : "none"} onChange={(event) => setCalendarTaskRecurrence(task.id, event.target.value as Recurrence | "none")}><option value="none">Does not repeat</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></label>{task.mode === "recurring" && <label className="calendar-repeat-control" onClick={(event) => event.stopPropagation()}>New series ends<select aria-label={`Repeat limit for new ${task.title} series`} value={task.repeatLimit ?? "forever"} onChange={(event) => setCalendarTaskRepeatLimit(task.id, event.target.value as RepeatLimit)}><option value="week">This week</option><option value="month">This month</option><option value="year">This year</option><option value="forever">No end</option></select></label>}</article>)}</div>
                 </>}
               </aside>}
               <section className="calendar-canvas">{calendarView !== "week" && <button className="calendar-task-toggle calendar-canvas-task-toggle" type="button" aria-label="Open task folders" title="Tasks to schedule" aria-expanded={isCalendarTrayOpen} onClick={toggleCalendarTray}><span /><span /><span /></button>}
