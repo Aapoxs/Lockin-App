@@ -13,4 +13,3 @@ export default defineConfig({
     target: ["es2021", "chrome105", "safari13"],
   },
 });
-

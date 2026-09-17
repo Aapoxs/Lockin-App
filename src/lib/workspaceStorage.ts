@@ -18,31 +18,50 @@ function openDatabase(): Promise<IDBDatabase> {
       }
     };
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error("Could not open local storage."));
+    request.onerror = () =>
+      reject(request.error ?? new Error("Could not open local storage."));
   });
 }
 
-async function withStore<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+async function withStore<T>(
+  mode: IDBTransactionMode,
+  run: (store: IDBObjectStore) => IDBRequest<T>,
+): Promise<T> {
   const database = await openDatabase();
   return new Promise<T>((resolve, reject) => {
     const transaction = database.transaction(STORE_NAME, mode);
     const request = run(transaction.objectStore(STORE_NAME));
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error("Local storage operation failed."));
+    request.onerror = () =>
+      reject(request.error ?? new Error("Local storage operation failed."));
     transaction.oncomplete = () => database.close();
-    transaction.onerror = () => { database.close(); reject(transaction.error ?? new Error("Local storage transaction failed.")); };
-    transaction.onabort = () => { database.close(); reject(transaction.error ?? new Error("Local storage transaction was cancelled.")); };
+    transaction.onerror = () => {
+      database.close();
+      reject(transaction.error ?? new Error("Local storage transaction failed."));
+    };
+    transaction.onabort = () => {
+      database.close();
+      reject(transaction.error ?? new Error("Local storage transaction was cancelled."));
+    };
   });
 }
 
 export async function loadWorkspace(): Promise<StoredWorkspace | null> {
-  const stored = await withStore<StoredWorkspace | undefined>("readonly", (store) => store.get(WORKSPACE_KEY));
+  const stored = await withStore<StoredWorkspace | undefined>("readonly", (store) =>
+    store.get(WORKSPACE_KEY),
+  );
   return stored ?? null;
 }
 
 export async function saveWorkspace(snapshot: unknown): Promise<void> {
-  const workspace: StoredWorkspace = { version: 1, savedAt: new Date().toISOString(), snapshot };
-  await withStore<IDBValidKey>("readwrite", (store) => store.put(workspace, WORKSPACE_KEY));
+  const workspace: StoredWorkspace = {
+    version: 1,
+    savedAt: new Date().toISOString(),
+    snapshot,
+  };
+  await withStore<IDBValidKey>("readwrite", (store) =>
+    store.put(workspace, WORKSPACE_KEY),
+  );
 }
 
 export async function clearWorkspace(): Promise<void> {
