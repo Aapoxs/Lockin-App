@@ -19,7 +19,7 @@ Lockin Board stores its workspace in the browser's IndexedDB database for its in
 
 ## Privacy, backups, and publishing
 
-- Your workspace remains in the browser profile on the device where you use the app. Lockin Board has: **no accounts, telemetry, server database, or default cross-device sync.**
+- Lockin Board has: **no accounts, telemetry, server database, or default cross-device sync.**
 - Keep exported backups somewhere you trust and do not commit them to a public repository. Files named `lockin-board-backup-*.json` are ignored by Git by default.
 - Use a browser or Windows profile that only you trust if your tasks are sensitive. This app is not an encrypted password manager or secure document vault.
 - A public deployment gives each visitor a separate local workspace; visitors cannot see one another's tasks.
@@ -34,7 +34,7 @@ Build an offline-first PWA with **React + TypeScript + IndexedDB**.
 - IndexedDB saves the complete workspace atomically after edits; the app requests persistent browser storage where the browser supports it.
 - Portable JSON backups protect against browser-profile resets, manual site-data clearing, or moving to a different laptop.
 
-See [the product specification](docs/01-product-spec.md) and [architecture](docs/02-technical-architecture.md).
+See [product specification](docs/01-product-spec.md) and [architecture](docs/02-technical-architecture.md).
 
 ## Possible future goals.
 
