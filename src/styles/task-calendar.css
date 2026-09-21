@@ -1,0 +1,363 @@
+/* Compact task cards — height grows only when their text needs it. */
+.task-card,
+.main-task-list .task-card,
+.folder-task-list .task-card {
+  min-height: 0;
+  padding: 10px 11px 8px;
+}
+.task-card h3 {
+  margin: 0 0 5px;
+  line-height: 1.32;
+}
+.task-card p {
+  line-height: 1.35;
+}
+.task-footer,
+.folder-task-list .task-footer {
+  margin-top: 9px;
+}
+.folder-task-list {
+  gap: 7px;
+  margin-top: 10px;
+}
+.task-card h3,
+.task-card p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.task-composer textarea {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 9px 11px;
+  resize: vertical;
+  border: 1px solid #52525b;
+  border-radius: 8px;
+  color: #fff;
+  background: #09090b;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.35;
+}
+.task-composer .task-note-input {
+  resize: none;
+}
+.task-composer {
+  padding: 18px;
+}
+.task-composer h2 {
+  margin: 0 0 14px;
+  font-size: 20px;
+}
+.task-composer label {
+  margin-bottom: 5px;
+}
+.task-composer select,
+.task-composer input[type="date"] {
+  margin-bottom: 10px;
+}
+.task-composer > div {
+  margin-top: 14px;
+}
+.task-composer .primary-action,
+.task-composer .cancel-button {
+  min-height: 38px;
+  border: 1px solid #52525b;
+  transition:
+    color 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+.task-composer .cancel-button:hover {
+  color: #09090b;
+  background: #fff;
+  border-color: #fff;
+}
+.task-composer .primary-action:hover {
+  color: #fff;
+  background: #27272a;
+  border-color: #52525b;
+}
+.task-delete-button {
+  display: grid;
+  place-items: center;
+}
+.task-delete-button svg {
+  width: 15px;
+  height: 15px;
+}
+.folder-dropzone > header h3 {
+  margin-left: 0;
+}
+
+/* Calendar entries fill their time cells, while source cards stay content-sized. */
+.hour-slot {
+  display: grid;
+  grid-auto-rows: minmax(0, 1fr);
+  align-items: stretch;
+  padding: 0;
+}
+.hour-slot .scheduled-event {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 7px 8px;
+  border-radius: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.month-day .scheduled-event {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  margin: 0 0 3px;
+  border-radius: 2px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.calendar-tray > div {
+  align-content: start;
+}
+.calendar-task {
+  min-height: 0;
+  padding: 10px 11px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.calendar-task strong,
+.calendar-task span {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.calendar-task,
+.hour-slot .scheduled-event,
+.month-day .scheduled-event {
+  border: 1px solid var(--task-folder-color, #a1a1aa);
+  color: #fff;
+  background: #18181b;
+}
+.calendar-repeat-control {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  color: #a1a1aa;
+  font-size: 10px;
+  font-weight: 700;
+}
+.calendar-repeat-control select {
+  min-width: 0;
+  padding: 4px 5px;
+  border: 1px solid #52525b;
+  border-radius: 4px;
+  color: #fff;
+  background: #09090b;
+  font: inherit;
+  font-size: 10px;
+}
+.hour-slot .scheduled-event {
+  padding: 7px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.32;
+}
+.month-day .scheduled-event {
+  padding: 5px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.32;
+}
+.calendar-task {
+  min-height: 47px;
+  border-radius: 4px;
+}
+.calendar-task strong {
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.32;
+}
+.calendar-task-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.calendar-slot-drag-preview {
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: block;
+  opacity: 1 !important;
+  transform: translate(-150%, -150%);
+  min-height: 0 !important;
+  margin: 0;
+  padding: 7px 8px !important;
+  overflow: hidden;
+  border-radius: 4px !important;
+  pointer-events: none;
+}
+.calendar-slot-drag-preview > span,
+.calendar-slot-drag-preview .calendar-repeat-control {
+  display: none;
+}
+.calendar-slot-drag-preview strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Main-page calendar stays deliberately quiet: dates and folder-coloured schedule markers only. */
+.main-month-section {
+  padding: 18px 18px 16px;
+}
+.main-month-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  overflow: hidden;
+  margin-top: 14px;
+  border: 1px solid #52525b;
+  border-radius: 6px;
+}
+.main-month-weekdays {
+  display: contents;
+}
+.main-month-weekdays span {
+  padding: 6px 2px;
+  color: #a1a1aa;
+  background: #18181b;
+  border-right: 1px solid #52525b;
+  border-bottom: 1px solid #52525b;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+}
+.main-month-weekdays span:nth-child(7) {
+  border-right: 0;
+}
+.main-month-day {
+  display: flex;
+  flex-direction: column;
+  min-height: 42px;
+  padding: 5px 6px;
+  background: #09090b;
+  border-right: 1px solid #3f3f46;
+  border-bottom: 1px solid #3f3f46;
+}
+.main-month-day:nth-child(7n) {
+  border-right: 1px solid #3f3f46;
+}
+.main-month-day > span {
+  color: #f4f4f5;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1;
+}
+.main-month-day-muted {
+  background: #050506;
+}
+.main-month-day-muted > span {
+  color: #71717a;
+}
+.main-month-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  align-items: center;
+  min-height: 8px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+.main-calendar-dot {
+  display: block;
+  width: 6px;
+  height: 6px;
+  background: var(--task-folder-color, #a1a1aa);
+  border-radius: 50%;
+}
+@media (max-width: 520px) {
+  .main-month-section {
+    padding: 15px 12px 12px;
+  }
+  .main-month-day {
+    min-height: 38px;
+    padding: 4px;
+  }
+  .main-month-weekdays span,
+  .main-month-day > span {
+    font-size: 11px;
+  }
+  .main-calendar-dot {
+    width: 5px;
+    height: 5px;
+  }
+}
+
+/* Main overview balances its two working panels; the calendar uses every scheduled entry as a folder-coloured marker. */
+@media (min-width: 961px) {
+  .main-overview {
+    grid-template-columns: minmax(260px, 1fr) minmax(0, 1fr);
+  }
+}
+.main-month-dots {
+  gap: 4px;
+  min-height: 10px;
+}
+.main-calendar-dot {
+  width: 9px;
+  height: 9px;
+}
+.urgent-arrow {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  color: #a1a1aa;
+  background: transparent;
+  cursor: pointer;
+}
+.urgent-arrow:hover {
+  color: #09090b;
+  background: #fff;
+}
+.urgent-arrow:focus-visible {
+  outline: 1px solid #fff;
+  outline-offset: 1px;
+}
+.scheduled-event-highlighted {
+  position: relative;
+  z-index: 1;
+  animation: calendar-entry-highlight 3s ease-out both;
+}
+@keyframes calendar-entry-highlight {
+  0% {
+    box-shadow:
+      0 0 0 1px #fff,
+      0 0 26px #fff;
+    filter: brightness(1.5);
+  }
+  45% {
+    box-shadow:
+      0 0 0 1px #fff,
+      0 0 16px #fff9;
+    filter: brightness(1.25);
+  }
+  100% {
+    box-shadow: none;
+    filter: brightness(1);
+  }
+}
+@media (max-width: 520px) {
+  .main-calendar-dot {
+    width: 7px;
+    height: 7px;
+  }
+}

@@ -1,0 +1,1019 @@
+/* Two-colour custom theme. Panel shades are derived from the selected main and text colours. */
+.focusboard-shell.custom-theme {
+  color: var(--theme-text);
+  background: var(--theme-main);
+}
+.focusboard-shell.custom-theme
+  :is(
+    .sidebar,
+    .workspace,
+    .calendar-canvas,
+    .week-calendar,
+    .month-calendar,
+    .main-month-calendar,
+    .folder-dropzone,
+    .task-card,
+    .urgent-section,
+    .calendar-section,
+    .main-task-section,
+    .kanban-column,
+    .pomodoro-clock,
+    .pomodoro-task-panel,
+    .today-completed-section,
+    .permanent-completed-section,
+    .completed-task,
+    .calendar-tray,
+    .calendar-task,
+    .calendar-event-settings-menu,
+    .task-composer
+  ) {
+  background: color-mix(in srgb, var(--theme-main) 92%, var(--theme-text) 8%) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 25%,
+    var(--theme-main) 75%
+  ) !important;
+}
+.focusboard-shell.custom-theme :is(.month-day, .main-month-day, .hour-slot) {
+  background: var(--theme-main) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 20%,
+    var(--theme-main) 80%
+  ) !important;
+}
+.focusboard-shell.custom-theme :is(.month-day-muted, .main-month-day-muted) {
+  background: color-mix(in srgb, var(--theme-main) 96%, #000 4%) !important;
+}
+.focusboard-shell.custom-theme
+  :is(h1, h2, h3, p, span, strong, time, label, a, button, code, .eyebrow) {
+  color: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme
+  :is(
+    .brand-mark,
+    .nav-item-selected > span,
+    .folder-dropzone header > span:last-child,
+    .calendar-view-switch button[aria-selected="true"],
+    .calendar-nav-today
+  ) {
+  color: var(--theme-main) !important;
+  background: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme :is(.calendar-task-toggle span, .timer-dot) {
+  background: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme :is(input, select, textarea) {
+  color: var(--theme-text) !important;
+  background: var(--theme-main) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 30%,
+    var(--theme-main) 70%
+  ) !important;
+}
+.pomodoro-page,
+.kanban-page,
+.completed-page {
+  padding-top: 10px;
+}
+.pomodoro-heading,
+.kanban-heading,
+.completed-page > header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+.pomodoro-heading h1,
+.kanban-heading h1,
+.completed-page h1 {
+  margin: 0;
+  color: #fff;
+  font-size: 28px;
+  letter-spacing: -0.045em;
+  line-height: 37px;
+}
+.pomodoro-heading p:not(.eyebrow),
+.kanban-heading p:not(.eyebrow),
+.completed-page > header p {
+  margin: 7px 0 0;
+  color: #a1a1aa;
+  font-size: 14px;
+}
+.completed-page > header > span {
+  display: grid;
+  min-width: 30px;
+  height: 30px;
+  place-items: center;
+  padding: 0 8px;
+  border-radius: 15px;
+  color: #09090b;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 750;
+}
+.pomodoro-session-count {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  display: block;
+  padding: 0;
+  color: #d4d4d8;
+  font-size: 11px;
+  font-weight: 750;
+}
+.pomodoro-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+  gap: 18px;
+}
+.pomodoro-clock,
+.pomodoro-task-panel {
+  padding: 26px;
+  background: #18181b;
+  border: 1px solid #3f3f46;
+  border-radius: 10px;
+}
+.pomodoro-clock {
+  text-align: center;
+}
+.pomodoro-clock > p:first-child {
+  margin: 0;
+  color: #a1a1aa;
+  font-size: 13px;
+  font-weight: 700;
+}
+.pomodoro-clock > strong {
+  display: block;
+  margin: 18px 0 12px;
+  color: #fff;
+  font-size: clamp(50px, 8vw, 88px);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.025em;
+  line-height: 0.9;
+}
+.pomodoro-clock > p:not(:first-child) {
+  min-height: 20px;
+  margin: 0;
+  color: #d4d4d8;
+  font-size: 14px;
+}
+.pomodoro-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+.pomodoro-reset {
+  padding: 10px 13px;
+  border: 1px solid #52525b;
+  border-radius: 7px;
+  color: #d4d4d8;
+  background: #18181b;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pomodoro-reset:hover {
+  color: #09090b;
+  background: #fff;
+}
+.pomodoro-task-panel h2 {
+  margin: 3px 0 16px;
+  color: #fff;
+  font-size: 19px;
+  letter-spacing: -0.02em;
+}
+.pomodoro-task-summary {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #3f3f46;
+}
+.pomodoro-task-summary h3 {
+  margin: 0 0 6px;
+  color: #fff;
+  font-size: 16px;
+}
+.pomodoro-task-summary p,
+.pomodoro-empty {
+  margin: 0 0 10px;
+  color: #a1a1aa;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.pomodoro-calendar-link {
+  color: #fff !important;
+}
+.pomodoro-task-summary .task-complete-button {
+  margin-top: 4px;
+}
+.pomodoro-kanban-note {
+  color: #d4d4d8 !important;
+  font-size: 12px !important;
+}
+.kanban-board {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.kanban-column {
+  min-height: 330px;
+  padding: 14px;
+  background: #18181b;
+  border: 1px solid #3f3f46;
+  border-radius: 9px;
+}
+.kanban-column > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #3f3f46;
+}
+.kanban-column h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 16px;
+}
+.kanban-column > header > span {
+  display: grid;
+  width: 23px;
+  height: 23px;
+  place-items: center;
+  border-radius: 50%;
+  color: #09090b;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 750;
+}
+.focusboard-shell.custom-theme .kanban-column > header > span {
+  /* Keep count text legible when the custom-theme text rule targets all spans. */
+  color: var(--theme-main) !important;
+  background: var(--theme-text) !important;
+}
+.kanban-column > div {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+.kanban-column .task-card {
+  background: #09090b;
+}
+.completed-list {
+  display: grid;
+  gap: 8px;
+}
+.completed-task {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 14px;
+  background: #18181b;
+  border: 1px solid #3f3f46;
+  border-radius: 8px;
+}
+.completed-task h2 {
+  margin: 0 0 4px;
+  color: #fff;
+  font-size: 15px;
+}
+.completed-task p,
+.completed-empty {
+  margin: 0;
+  color: #a1a1aa;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.completed-task > div:last-child {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.completed-empty {
+  padding: 22px 0;
+}
+.today-completed-section,
+.permanent-completed-section {
+  padding: 16px;
+  margin-bottom: 18px;
+  background: #18181b;
+  border: 1px solid #3f3f46;
+  border-radius: 10px;
+}
+.today-completed-section > header,
+.permanent-completed-section > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.today-completed-section h2,
+.permanent-completed-section h2 {
+  margin: 2px 0 0;
+  color: #fff;
+  font-size: 18px;
+  letter-spacing: -0.025em;
+}
+.today-completed-section header > span,
+.permanent-completed-section header > span {
+  display: grid;
+  min-width: 25px;
+  height: 25px;
+  place-items: center;
+  padding: 0 7px;
+  border-radius: 13px;
+  color: #09090b;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 750;
+}
+.today-completed-list {
+  display: grid;
+  gap: 7px;
+}
+.today-completed-task {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 11px;
+  border: 1px solid var(--task-folder-color, #a1a1aa);
+  border-radius: 7px;
+  background: #09090b;
+}
+.today-completed-task time {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+.today-completed-task h3 {
+  margin: 0 0 3px;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.3;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.today-completed-task p {
+  margin: 0;
+  color: #a1a1aa;
+  font-size: 11px;
+  line-height: 1.35;
+}
+.today-completed-task > strong {
+  color: #d4d4d8;
+  font-size: 11px;
+  font-weight: 750;
+}
+.today-completed-task-done {
+  opacity: 0.58;
+  filter: grayscale(1);
+}
+.today-completed-task-done h3 {
+  text-decoration: line-through;
+}
+.today-completed-task-done > strong {
+  color: #fff;
+}
+.permanent-completed-section .completed-list {
+  margin-top: 2px;
+}
+.mindmap-page {
+  padding-top: 30px;
+}
+.mindmap-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+.mindmap-heading h1 {
+  margin: 0;
+  color: #fff;
+  font-size: 34px;
+  letter-spacing: -0.045em;
+}
+.mindmap-heading p:not(.eyebrow) {
+  margin: 7px 0 0;
+  color: #a1a1aa;
+  font-size: 14px;
+}
+.mindmap-heading > span {
+  padding: 7px 10px;
+  border: 1px solid #3f3f46;
+  border-radius: 999px;
+  color: #d4d4d8;
+  background: #18181b;
+  font-size: 12px;
+  font-weight: 700;
+}
+.mindmap-canvas {
+  min-height: 560px;
+  padding: 28px 24px 36px;
+  overflow: auto;
+  background: radial-gradient(circle at 50% 0, #27272a 0, #18181b 38%, #09090b 76%);
+  border: 1px solid #3f3f46;
+  border-radius: 12px;
+}
+.mindmap-root {
+  position: relative;
+  z-index: 1;
+  width: max-content;
+  margin: 0 auto;
+  padding: 12px 18px;
+  border: 1px solid #fff;
+  border-radius: 8px;
+  color: #09090b;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  box-shadow: 0 0 0 6px #09090b;
+}
+.mindmap-branches {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 28px 22px;
+  min-width: 680px;
+  margin-top: 54px;
+  padding-top: 28px;
+}
+.mindmap-branches::before {
+  position: absolute;
+  top: 0;
+  left: calc(50% / var(--mindmap-columns, 1));
+  right: calc(50% / var(--mindmap-columns, 1));
+  height: 1px;
+  background: #52525b;
+  content: "";
+}
+.mindmap-branch {
+  position: relative;
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+.mindmap-branch::before {
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  width: 1px;
+  height: 28px;
+  background: var(--branch-color, #fff);
+  content: "";
+}
+.mindmap-folder-node {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid var(--branch-color, #fff);
+  border-radius: 7px;
+  color: #fff;
+  background: #18181b;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 750;
+  text-align: left;
+}
+.mindmap-folder-node:hover {
+  background: #27272a;
+}
+.mindmap-folder-node i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--branch-color, #fff);
+  box-shadow: 0 0 0 3px #27272a;
+}
+.mindmap-folder-node span {
+  margin-left: auto;
+  color: #09090b;
+  background: var(--branch-color, #fff);
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 11px;
+}
+.mindmap-task-nodes {
+  display: grid;
+  gap: 9px;
+  margin-left: 14px;
+  padding-left: 18px;
+  border-left: 1px solid var(--branch-color, #52525b);
+}
+.mindmap-task-node {
+  position: relative;
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid #3f3f46;
+  border-radius: 6px;
+  color: #fff;
+  background: #09090b;
+  text-align: left;
+}
+.mindmap-task-node::before {
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  width: 18px;
+  height: 1px;
+  background: var(--branch-color, #52525b);
+  content: "";
+}
+.mindmap-task-node:hover {
+  border-color: var(--branch-color, #fff);
+  background: #18181b;
+}
+.mindmap-task-node strong {
+  font: inherit;
+  font-weight: 650;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.mindmap-task-node small {
+  color: #a1a1aa;
+  font-size: 11px;
+}
+.mindmap-task-nodes > p {
+  margin: 0;
+  color: #71717a;
+  font-size: 12px;
+  font-style: italic;
+}
+@media (max-width: 960px) {
+  .pomodoro-layout {
+    grid-template-columns: 1fr;
+  }
+  .kanban-board {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 720px) {
+  .pomodoro-page,
+  .kanban-page,
+  .completed-page,
+  .mindmap-page {
+    padding-top: 10px;
+  }
+  .kanban-board {
+    grid-template-columns: 1fr;
+  }
+  .pomodoro-heading,
+  .kanban-heading,
+  .completed-page > header,
+  .mindmap-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .completed-task {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .completed-task > div:last-child {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .mindmap-canvas {
+    min-height: 460px;
+    padding: 22px 16px;
+  }
+  .mindmap-branches {
+    min-width: 590px;
+  }
+}
+.mindmap-branches::before {
+  top: -26px;
+  left: 50%;
+  right: auto;
+  width: 1px;
+  height: 26px;
+}
+.mindmap-branches::after {
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 1px;
+  background: #52525b;
+  content: "";
+}
+.mindmap-branch::before {
+  z-index: 1;
+}
+
+/* Main-page calendar: preserve folder accents and use one uninterrupted grid. */
+.focusboard-shell.custom-theme .folder-dropzone {
+  border-color: var(--folder-color) !important;
+}
+.focusboard-shell.custom-theme .main-calendar-dot {
+  background: var(--task-folder-color) !important;
+}
+.main-month-day:nth-child(7n + 1) {
+  border-right: 0;
+}
+.main-month-day:nth-last-child(-n + 7) {
+  border-bottom: 0;
+}
+.focusboard-shell.custom-theme .main-month-day {
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 20%,
+    var(--theme-main) 80%
+  ) !important;
+}
+.focusboard-shell.custom-theme :is(.month-day-muted, .main-month-day-muted) > span {
+  color: color-mix(in srgb, var(--theme-text) 45%, var(--theme-main) 55%) !important;
+}
+.folder-task-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.folder-task-list .task-card {
+  padding: 9px 9px 7px;
+}
+.folder-task-list .task-card p {
+  font-size: 11px;
+}
+.focusboard-shell.custom-theme .primary-action,
+.focusboard-shell.custom-theme .urgent-heading-actions > span,
+.focusboard-shell.custom-theme .timer button {
+  color: var(--theme-main) !important;
+  background: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme .primary-action kbd {
+  color: var(--theme-main) !important;
+  background: color-mix(in srgb, var(--theme-main) 12%, transparent) !important;
+}
+.focusboard-shell.custom-theme .task-composer .cancel-button {
+  color: var(--theme-text) !important;
+  background: color-mix(in srgb, var(--theme-main) 88%, var(--theme-text) 12%) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 30%,
+    var(--theme-main) 70%
+  ) !important;
+}
+.focusboard-shell.custom-theme .task-composer .cancel-button:hover,
+.focusboard-shell.custom-theme .task-composer .primary-action:hover {
+  color: var(--theme-main) !important;
+  background: var(--theme-text) !important;
+  border-color: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme .nav-item-selected > span {
+  color: inherit !important;
+  background: transparent !important;
+}
+@media (max-width: 420px) {
+  .folder-task-list {
+    grid-template-columns: 1fr;
+  }
+}
+.navigation .nav-item > span {
+  background: transparent !important;
+}
+.workspace {
+  position: relative;
+}
+.utility-bar {
+  position: absolute;
+  z-index: 4;
+  top: 10px;
+  right: 24px;
+  min-height: 0;
+}
+.board-heading {
+  padding: 10px 0 20px;
+}
+.folder-section {
+  margin-top: 32px;
+  padding-top: 24px;
+}
+.folder-up-next-control {
+  justify-content: space-between;
+  gap: 12px;
+}
+.folder-up-next-control input {
+  order: 2;
+}
+.main-task-header .add-task {
+  padding: 9px 13px;
+  border: 1px solid #fff;
+  border-radius: 7px;
+  color: #09090b;
+  background: #fff;
+  font-weight: 800;
+  box-shadow:
+    0 0 0 3px #ffffff1f,
+    0 8px 20px #0005;
+}
+.focusboard-shell.custom-theme .main-task-header .add-task {
+  color: var(--theme-main) !important;
+  background: var(--theme-text) !important;
+  border-color: var(--theme-text) !important;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--theme-text) 16%, transparent),
+    0 8px 20px color-mix(in srgb, var(--theme-main) 70%, transparent) !important;
+}
+.main-overview {
+  gap: 14px;
+}
+.urgent-section,
+.main-month-section {
+  padding: 14px;
+}
+.urgent-list {
+  gap: 6px;
+  margin-top: 10px;
+}
+.urgent-task {
+  min-height: 48px;
+  padding: 8px 9px 8px 11px;
+}
+.main-month-calendar {
+  margin-top: 10px;
+}
+.main-month-weekdays span {
+  padding: 5px 2px;
+  font-size: 10px;
+}
+.main-month-day {
+  min-height: 34px;
+  padding: 4px 5px;
+}
+.main-month-day > span {
+  font-size: 11px;
+}
+.main-month-dots {
+  gap: 3px;
+  min-height: 7px;
+  padding-top: 3px;
+}
+.main-calendar-dot {
+  width: 7px;
+  height: 7px;
+}
+.folder-section {
+  margin-top: 24px;
+  padding-top: 20px;
+}
+.folder-section > div > p {
+  display: none;
+}
+.main-task-section {
+  margin-top: 20px;
+}
+
+/* Custom-theme controls always use either the selected foreground or a derived panel shade. */
+.focusboard-shell.custom-theme .nav-item-selected {
+  color: var(--theme-text) !important;
+  background: color-mix(in srgb, var(--theme-main) 86%, var(--theme-text) 14%) !important;
+}
+.focusboard-shell.custom-theme
+  :is(
+    .data-panel button,
+    .theme-controls button,
+    .pomodoro-reset,
+    .urgent-repeat-filter
+  ) {
+  color: var(--theme-text) !important;
+  background: color-mix(in srgb, var(--theme-main) 88%, var(--theme-text) 12%) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 30%,
+    var(--theme-main) 70%
+  ) !important;
+}
+.focusboard-shell.custom-theme
+  :is(
+    .data-panel button,
+    .theme-controls button,
+    .pomodoro-reset,
+    .urgent-repeat-filter
+  ):hover,
+.focusboard-shell.custom-theme .urgent-repeat-filter[aria-pressed="true"] {
+  color: var(--theme-main) !important;
+  background: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme :is(.main-month-weekdays span, .month-calendar > b) {
+  color: var(--theme-text) !important;
+  background: color-mix(in srgb, var(--theme-main) 86%, var(--theme-text) 14%) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 28%,
+    var(--theme-main) 72%
+  ) !important;
+}
+.focusboard-shell.custom-theme .pomodoro-clock {
+  box-shadow: none !important;
+}
+.focusboard-shell.custom-theme .pomodoro-clock .primary-action {
+  color: var(--theme-main) !important;
+  background: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme .calendar-repeat-control select {
+  color: var(--theme-text) !important;
+  background: var(--theme-main) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 32%,
+    var(--theme-main) 68%
+  ) !important;
+}
+
+/* Complete the custom-theme treatment for compact controls and calendar task states. */
+.focusboard-shell.custom-theme
+  :is(
+    .calendar-clear-all,
+    .calendar-nav,
+    .calendar-view-switch,
+    .timer,
+    .mobile-menu-button,
+    .calendar-task-toggle
+  ) {
+  color: var(--theme-text) !important;
+  background: color-mix(in srgb, var(--theme-main) 88%, var(--theme-text) 12%) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 30%,
+    var(--theme-main) 70%
+  ) !important;
+  box-shadow: none !important;
+}
+.focusboard-shell.custom-theme
+  :is(
+    .calendar-clear-all,
+    .calendar-nav button,
+    .calendar-nav > span,
+    .calendar-view-switch button,
+    .timer,
+    .timer strong,
+    .mobile-menu-button,
+    .calendar-task-toggle,
+    .calendar-event-settings-trigger
+  ) {
+  color: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme :is(.mobile-menu-button span, .calendar-task-toggle span) {
+  background: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme
+  :is(
+    .calendar-nav-today,
+    .calendar-view-switch button[aria-selected="true"],
+    .timer button
+  ) {
+  color: var(--theme-main) !important;
+  background: var(--theme-text) !important;
+  border-color: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme
+  :is(
+    .calendar-nav button:hover,
+    .calendar-view-switch button:hover,
+    .mobile-menu-button:hover,
+    .calendar-task-toggle:hover,
+    .calendar-task-toggle[aria-expanded="true"]
+  ) {
+  color: var(--theme-main) !important;
+  background: var(--theme-text) !important;
+  border-color: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme :is(.week-corner, .week-day-label, .hour-label) {
+  color: var(--theme-text) !important;
+  background: color-mix(in srgb, var(--theme-main) 88%, var(--theme-text) 12%) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 28%,
+    var(--theme-main) 72%
+  ) !important;
+}
+.focusboard-shell.custom-theme :is(.calendar-task, .scheduled-event) {
+  color: var(--theme-text) !important;
+  background: color-mix(in srgb, var(--theme-main) 88%, var(--theme-text) 12%) !important;
+  border-color: var(--task-folder-color, #a1a1aa) !important;
+}
+.focusboard-shell.custom-theme
+  :is(
+    .calendar-task strong,
+    .calendar-task span,
+    .scheduled-event strong,
+    .scheduled-event footer,
+    .calendar-event-settings-trigger
+  ) {
+  color: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme .scheduled-event footer button {
+  color: var(--theme-main) !important;
+  background: var(--theme-text) !important;
+  border-color: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme .calendar-event-settings-menu button:hover {
+  color: var(--theme-main) !important;
+  background: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme :is(.urgent-task, .task-card) {
+  background: color-mix(in srgb, var(--theme-main) 88%, var(--theme-text) 12%) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 28%,
+    var(--theme-main) 72%
+  ) !important;
+}
+.focusboard-shell.custom-theme
+  :is(.task-meta span, .task-edit-button, .task-delete-button, .urgent-arrow) {
+  color: var(--theme-text) !important;
+  background: color-mix(in srgb, var(--theme-main) 86%, var(--theme-text) 14%) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 30%,
+    var(--theme-main) 70%
+  ) !important;
+}
+.focusboard-shell.custom-theme
+  :is(.task-complete-button, .task-meta span:last-child:not(:only-child)) {
+  color: var(--theme-main) !important;
+  background: var(--theme-text) !important;
+  border-color: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme .task-complete-button:hover {
+  color: var(--theme-text) !important;
+  background: color-mix(in srgb, var(--theme-main) 86%, var(--theme-text) 14%) !important;
+}
+.focusboard-shell.custom-theme
+  :is(
+    .task-composer select,
+    .pomodoro-task-panel select,
+    .calendar-repeat-control select
+  ) {
+  color: var(--theme-text) !important;
+  background: var(--theme-main) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 32%,
+    var(--theme-main) 68%
+  ) !important;
+}
+.nav-page-icon {
+  display: block;
+  flex: 0 0 15px;
+  width: 15px;
+  height: 15px;
+  color: inherit !important;
+  background: transparent !important;
+  fill: none !important;
+  stroke: currentColor;
+}
+.focusboard-shell.custom-theme
+  :is(
+    .mobile-menu-button:hover,
+    .calendar-task-toggle:hover,
+    .calendar-task-toggle[aria-expanded="true"]
+  )
+  span {
+  background: var(--theme-main) !important;
+}
+.timer button {
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+.timer-control-icon {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+.focusboard-shell.custom-theme .navigation .nav-item:not(.nav-folder-item),
+.focusboard-shell.custom-theme
+  .navigation
+  .nav-item:not(.nav-folder-item).nav-item-selected {
+  background: transparent !important;
+}
+.navigation .nav-item:not(.nav-folder-item),
+.navigation .nav-item:not(.nav-folder-item).nav-item-selected {
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+.navigation .nav-page-icon,
+.navigation .nav-page-icon :is(path, rect, circle) {
+  background: transparent !important;
+  fill: none !important;
+}
+.navigation .nav-page-icon {
+  display: block;
+  flex: 0 0 15px;
+  width: 15px;
+  height: 15px;
+  background: transparent !important;
+  fill: none !important;
+  stroke: currentColor !important;
+}

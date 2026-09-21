@@ -1,0 +1,198 @@
+/* Task lifecycle, focus, and archive views. */
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 7px;
+}
+.task-meta span {
+  padding: 2px 5px;
+  color: #d4d4d8;
+  background: #27272a;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+.task-meta span:last-child:not(:only-child) {
+  color: #09090b;
+  background: #fff;
+}
+.task-footer {
+  gap: 6px;
+  justify-content: flex-end;
+}
+.task-complete-button {
+  padding: 4px 7px;
+  border: 1px solid #52525b;
+  border-radius: 5px;
+  color: #09090b;
+  background: #fff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.1;
+  cursor: pointer;
+}
+.task-complete-button:hover {
+  color: #fff;
+  background: #27272a;
+}
+.task-complete-button:focus-visible {
+  outline: 1px solid #fff;
+  outline-offset: 1px;
+}
+.task-composer select,
+.pomodoro-task-panel select {
+  display: block;
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid #52525b;
+  border-radius: 8px;
+  color: #fff;
+  background: #09090b;
+  font: inherit;
+  font-size: 14px;
+}
+.task-composer select {
+  margin-bottom: 14px;
+}
+.task-composer input[type="date"] {
+  margin-bottom: 14px;
+}
+.task-repeat-note {
+  margin: 0 0 14px;
+  padding: 9px 10px;
+  border-left: 2px solid #fff;
+  color: #a1a1aa;
+  background: #27272a;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.scheduled-event {
+  display: flex !important;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 5px;
+  overflow: hidden;
+}
+.scheduled-event strong {
+  display: block;
+  min-width: 0;
+  color: #fff;
+  font: inherit;
+  font-weight: 650;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.scheduled-event footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  margin-top: auto;
+  color: #a1a1aa;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+.scheduled-event footer button {
+  display: grid;
+  width: 19px;
+  height: 19px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #52525b;
+  border-radius: 4px;
+  color: #09090b;
+  background: #fff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.scheduled-event-completed {
+  opacity: 0.46;
+  filter: grayscale(1);
+  cursor: default;
+}
+.scheduled-event-completed[draggable="true"] {
+  cursor: grab;
+}
+.scheduled-event-completed[draggable="true"]:active {
+  cursor: grabbing;
+}
+.scheduled-event-completed footer {
+  color: #d4d4d8;
+}
+.month-day .scheduled-event footer {
+  font-size: 10px;
+}
+.month-day .scheduled-event footer button {
+  width: 17px;
+  height: 17px;
+}
+.scheduled-event {
+  position: relative;
+}
+.scheduled-event strong {
+  padding-right: 20px;
+}
+.calendar-event-settings {
+  position: absolute;
+  z-index: 2;
+  top: 3px;
+  right: 4px;
+}
+.calendar-event-settings-trigger {
+  display: block;
+  padding: 0;
+  border: 0;
+  color: #a1a1aa;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  line-height: 1;
+  cursor: pointer;
+}
+.calendar-event-settings-trigger:hover,
+.calendar-event-settings-trigger[aria-expanded="true"] {
+  color: #fff;
+}
+.scheduled-event:has(.calendar-event-settings-menu) {
+  overflow: visible;
+}
+.calendar-event-settings-menu {
+  position: absolute;
+  z-index: 8;
+  top: 18px;
+  right: 0;
+  display: grid;
+  min-width: 146px;
+  padding: 4px;
+  background: #18181b;
+  border: 1px solid #52525b;
+  border-radius: 5px;
+  box-shadow: 0 8px 18px #0009;
+}
+.calendar-event-settings-menu button {
+  display: block;
+  width: auto;
+  height: auto;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 3px;
+  color: #fff;
+  background: transparent;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: left;
+  white-space: nowrap;
+}
+.calendar-event-settings-menu button:hover {
+  color: #09090b;
+  background: #fff;
+}

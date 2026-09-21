@@ -1,0 +1,692 @@
+/* Sidebar navigation remains usable when its folder list outgrows the viewport. */
+.sidebar {
+  height: 100dvh;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.sidebar,
+.workspace {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.sidebar::-webkit-scrollbar,
+.workspace::-webkit-scrollbar {
+  display: none;
+}
+@media (min-width: 1101px) {
+  .mobile-menu-button {
+    display: block;
+  }
+  .focusboard-shell {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .workspace {
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .focusboard-shell.sidebar-collapsed {
+    grid-template-columns: 0 minmax(0, 1fr);
+  }
+  .focusboard-shell.sidebar-collapsed .sidebar {
+    width: 0;
+    padding-inline: 0;
+    border-right-width: 0;
+    overflow: hidden;
+  }
+}
+.nav-folder-item {
+  user-select: none;
+}
+
+/* Do not squeeze two folders into a narrow category panel. */
+.folder-group-panel {
+  container-type: inline-size;
+}
+@container (max-width: 900px) {
+  .folder-group-panel > .folder-group-cards {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* A small, curated palette keeps every theme pair within a tested contrast range. */
+.theme-controls {
+  margin: 20px 6px 0;
+  padding: 14px 6px 0;
+  border-top: 1px solid #3f3f46;
+}
+.theme-controls .nav-label {
+  margin: 0 0 8px;
+}
+.theme-preset-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.theme-preset-button {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 8px;
+  border: 1px solid #3f3f46;
+  border-radius: 6px;
+  color: #d4d4d8;
+  background: #18181b;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: left;
+  white-space: nowrap;
+}
+.theme-preset-button i {
+  display: block;
+  flex: 0 0 13px;
+  width: 13px;
+  height: 13px;
+  border: 1px solid;
+  border-radius: 50%;
+}
+.theme-preset-button:hover,
+.theme-preset-button[aria-pressed="true"] {
+  color: #09090b;
+  background: #fff;
+  border-color: #fff;
+}
+.focusboard-shell.custom-theme .theme-controls {
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 25%,
+    var(--theme-main) 75%
+  ) !important;
+}
+.focusboard-shell.custom-theme .theme-preset-button {
+  color: var(--theme-text) !important;
+  background: color-mix(in srgb, var(--theme-main) 88%, var(--theme-text) 12%) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 30%,
+    var(--theme-main) 70%
+  ) !important;
+}
+.focusboard-shell.custom-theme .theme-preset-button:hover,
+.focusboard-shell.custom-theme .theme-preset-button[aria-pressed="true"] {
+  color: var(--theme-main) !important;
+  background: var(--theme-text) !important;
+  border-color: var(--theme-text) !important;
+}
+@media (max-width: 620px) {
+  .folder-group-cards {
+    grid-template-columns: 1fr;
+  }
+  .folder-group-cards .folder-dropzone {
+    height: auto;
+    min-height: 0;
+  }
+  .folder-task-list {
+    max-height: 320px;
+  }
+  .folder-group-cards .folder-dropzone {
+    height: auto;
+  }
+  .folder-task-list {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+}
+@media (max-width: 620px) {
+  .folder-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .folder-section-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 760px) {
+  .folder-section-actions
+    .folder-group-visibility-button:hover:not(.folder-group-visibility-flash) {
+    color: #d4d4d8;
+    background: transparent;
+    border-color: #52525b;
+  }
+  .focusboard-shell.custom-theme
+    .folder-section-actions
+    .folder-group-visibility-button:hover:not(.folder-group-visibility-flash) {
+    color: var(--theme-text) !important;
+    background: color-mix(
+      in srgb,
+      var(--theme-main) 88%,
+      var(--theme-text) 12%
+    ) !important;
+    border-color: color-mix(
+      in srgb,
+      var(--theme-text) 30%,
+      var(--theme-main) 70%
+    ) !important;
+  }
+  .folder-group-visibility-button.folder-group-visibility-flash {
+    animation: folder-group-button-feedback 1s ease-out;
+  }
+}
+
+@keyframes folder-group-button-feedback {
+  from {
+    color: var(--theme-main, #09090b);
+    background: var(--theme-text, #fff);
+    border-color: var(--theme-text, #fff);
+    box-shadow: 0 0 0 1px var(--theme-text, #fff);
+  }
+}
+
+/* At extremely narrow widths, task controls need a full row to remain usable. */
+@media (max-width: 360px) {
+  :is(.folder-task-list, .main-task-list) {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile main page: one calm reading column with no accidental horizontal scroll. */
+@media (max-width: 620px) {
+  html,
+  body {
+    min-width: 0;
+    overflow-x: hidden;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none;
+  }
+  .workspace {
+    width: auto;
+    max-width: 100%;
+    padding: 0 8px 20px;
+    overflow-x: hidden;
+  }
+  .utility-bar {
+    top: 10px;
+    right: clamp(6px, 2.5vw, 10px);
+  }
+  .mobile-menu-button {
+    width: 37px;
+    height: 37px;
+    margin-right: 0;
+    border: 1px solid #52525b;
+  }
+  .board-heading {
+    min-height: 0;
+    padding: 10px 2px 16px;
+  }
+  .board-heading h1 {
+    font-size: 28px;
+    line-height: 37px;
+  }
+  .main-overview {
+    gap: 12px;
+  }
+  .urgent-section,
+  .main-month-section,
+  .main-task-section,
+  .folder-section {
+    padding: 14px;
+    border-radius: 10px;
+  }
+  .urgent-section header,
+  .main-month-section header,
+  .main-task-header {
+    align-items: flex-start;
+  }
+  .urgent-heading-actions {
+    flex-shrink: 0;
+  }
+  .urgent-repeat-filter {
+    max-width: 116px;
+    line-height: 1.15;
+  }
+  .urgent-task {
+    min-height: 52px;
+    padding-right: 8px;
+  }
+  .main-month-calendar {
+    margin-top: 12px;
+  }
+  .main-month-day {
+    min-height: 40px;
+    padding: 4px 3px;
+  }
+  .main-task-section {
+    margin-top: 8px;
+    padding: 0;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0;
+  }
+  .main-task-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 2px 8px;
+    text-align: left;
+  }
+  .main-task-header h2 {
+    font-size: 16px;
+  }
+  .main-task-header .add-task,
+  .folder-add-button {
+    min-width: 0;
+    padding-inline: 11px;
+  }
+  .main-task-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 8px;
+  }
+  .folder-section {
+    margin-top: 14px;
+  }
+  .folder-section-heading {
+    gap: 12px;
+    padding-bottom: 14px;
+  }
+  .folder-section-heading h2 {
+    font-size: 19px;
+  }
+  .folder-section-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+  .folder-group-visibility-button,
+  .folder-add-button {
+    width: 100%;
+    min-height: 38px;
+  }
+  .folder-group-panel {
+    padding: 10px;
+  }
+  .folder-group-cards .folder-dropzone {
+    min-height: 176px;
+  }
+  :is(.folder-task-list, .main-task-list) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: min(320px, 52vh);
+    scrollbar-width: none;
+  }
+  :is(.folder-task-list, .main-task-list) > .task-card:only-child {
+    grid-column: 1 / -1;
+  }
+  :is(.folder-task-list, .main-task-list) > .task-card:nth-child(odd):last-child {
+    grid-column: 1 / -1;
+  }
+  :is(.folder-task-list, .main-task-list) .task-card {
+    height: 104px;
+    min-height: 104px;
+    padding: 7px 7px 30px;
+  }
+  :is(.folder-task-list, .main-task-list) .task-card h3 {
+    display: -webkit-box;
+    padding-right: 42px;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font-size: 12px;
+    line-height: 1.2;
+    text-overflow: clip;
+    white-space: normal;
+  }
+  :is(.folder-task-list, .main-task-list) .task-card p {
+    margin-top: 3px;
+    font-size: 10px;
+    line-height: 1.25;
+    -webkit-line-clamp: 2;
+  }
+  :is(.folder-task-list, .main-task-list) .task-due {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    display: block;
+    margin: 0;
+    font-size: 9px;
+  }
+  :is(.folder-task-list, .main-task-list) .task-footer {
+    right: 6px;
+    bottom: 6px;
+    gap: 2px;
+  }
+  :is(.folder-task-list, .main-task-list) .task-card {
+    touch-action: pan-y;
+  }
+  :is(.folder-task-list, .main-task-list) .task-card-touch-dragging {
+    opacity: 1;
+    transform: scale(0.97);
+  }
+  :is(.folder-task-list, .main-task-list) .task-mode,
+  :is(.folder-task-list, .main-task-list) .task-overdue {
+    max-width: 56px;
+    overflow: hidden;
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  :is(.folder-task-list, .main-task-list)
+    :is(.task-complete-button, .task-edit-button, .task-delete-button) {
+    min-width: 22px;
+    height: 22px;
+    padding-inline: 4px;
+  }
+  .folder-task-list::-webkit-scrollbar {
+    display: none;
+  }
+  .task-card-touch-dragging {
+    opacity: 0.72;
+    outline: 1px solid var(--folder-color, #38bdf8);
+    outline-offset: 1px;
+  }
+  :is(.folder-task-list, .main-task-list) .task-card-touch-dragging {
+    opacity: 0.72;
+    transform: none;
+  }
+  .task-touch-drag-preview {
+    position: fixed;
+    z-index: 100;
+    top: var(--touch-drag-y);
+    left: var(--touch-drag-x);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    overflow: hidden;
+    color: #fff;
+    background: #27272a;
+    border: 1px solid #52525b;
+    border-radius: 8px;
+    box-shadow: 0 12px 28px #0009;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+  }
+  .task-touch-drag-preview strong,
+  .task-touch-drag-preview span {
+    display: block;
+    overflow: hidden;
+    font-size: 12px;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .task-touch-drag-preview span {
+    font-size: 10px;
+  }
+  .focusboard-shell.custom-theme .task-touch-drag-preview {
+    color: var(--theme-text);
+    background: color-mix(in srgb, var(--theme-main) 82%, var(--theme-text) 18%);
+    border-color: color-mix(in srgb, var(--theme-text) 38%, var(--theme-main) 62%);
+  }
+}
+
+/* Keep the utility controls from sharing the title's line on narrow phones. */
+@media (max-width: 420px) {
+  .calendar-page,
+  .pomodoro-page,
+  .kanban-page,
+  .completed-page {
+    padding-top: 10px;
+  }
+}
+@media (max-width: 380px) {
+  .pomodoro-heading {
+    margin-bottom: 16px;
+  }
+  .calendar-page h1,
+  .pomodoro-heading h1,
+  .kanban-heading h1,
+  .completed-page h1 {
+    font-size: 28px;
+    letter-spacing: -0.04em;
+  }
+  .pomodoro-controls > :is(.primary-action, .pomodoro-reset) {
+    min-height: 38px;
+    padding: 8px;
+    font-size: 12px;
+  }
+  .pomodoro-options-trigger {
+    width: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    padding: 8px;
+  }
+}
+@media (max-width: 390px) {
+  .workspace {
+    padding-inline: 6px;
+  }
+  .board-heading {
+    padding-top: 10px;
+  }
+  .urgent-section,
+  .main-month-section,
+  .main-task-section,
+  .folder-section {
+    padding: 10px;
+  }
+  .urgent-repeat-filter {
+    max-width: 92px;
+    padding-inline: 5px;
+  }
+  .main-month-day {
+    min-height: 36px;
+    padding-inline: 2px;
+  }
+  .main-calendar-dot {
+    width: 5px;
+    height: 5px;
+  }
+}
+@media (max-width: 620px) {
+  html,
+  body,
+  #root,
+  .focusboard-shell {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+  .focusboard-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .workspace {
+    min-width: 0;
+    padding-inline: clamp(6px, 2.5vw, 10px);
+  }
+  :is(
+    .main-overview,
+    .urgent-section,
+    .main-month-section,
+    .main-task-section,
+    .folder-section,
+    .folder-group-panel,
+    .folder-group-cards,
+    .folder-dropzone
+  ) {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .main-month-calendar {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+@media (max-width: 1100px) {
+  .focusboard-shell:has(.sidebar.sidebar-open) .workspace {
+    pointer-events: none;
+    user-select: none;
+  }
+  .mobile-nav-scrim {
+    touch-action: none;
+  }
+  html,
+  body,
+  #root,
+  .focusboard-shell,
+  .workspace {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+  .sidebar {
+    border-right: 1px solid #52525b;
+  }
+  .workspace {
+    padding-inline: 14px;
+  }
+  .utility-bar {
+    right: 14px;
+  }
+  .folder-section {
+    padding: 0;
+    border: 0;
+    background: transparent !important;
+  }
+  .folder-section-heading {
+    padding-inline: 2px;
+  }
+  .focusboard-shell.custom-theme .sidebar {
+    border-right-color: color-mix(
+      in srgb,
+      var(--theme-text) 28%,
+      var(--theme-main) 72%
+    ) !important;
+  }
+}
+
+/* Keep phone padding compact after the broader tablet rules above. */
+@media (max-width: 620px) {
+  .workspace {
+    padding-inline: clamp(6px, 2.5vw, 10px);
+  }
+  .utility-bar {
+    right: clamp(6px, 2.5vw, 10px);
+  }
+  .folder-group-cards .folder-dropzone {
+    height: auto;
+  }
+  .folder-task-list {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+    scrollbar-gutter: auto;
+  }
+}
+
+/* This preview lives in document.body so folder overflow can never clip it. */
+.task-touch-drag-preview {
+  position: fixed;
+  z-index: 100;
+  top: var(--touch-drag-y);
+  left: var(--touch-drag-x);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  overflow: hidden;
+  border: 1px solid;
+  border-radius: 8px;
+  box-shadow: 0 12px 28px #0009;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+.task-touch-drag-preview strong,
+.task-touch-drag-preview span {
+  display: block;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.task-touch-drag-preview span {
+  font-size: 10px;
+}
+.task-card-desktop-dragging {
+  opacity: 0.58;
+  outline: 1px solid var(--folder-color, #38bdf8);
+  outline-offset: 1px;
+}
+.navigation .nav-item > .folder-nav-dot,
+.sidebar-folder-drag-preview .folder-nav-dot {
+  background: var(--folder-color) !important;
+}
+.sidebar-folder-reordering {
+  opacity: 0.5;
+}
+.sidebar-folder-drag-preview {
+  position: fixed;
+  z-index: 110;
+  top: var(--sidebar-drag-y);
+  left: var(--sidebar-drag-x);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 10px;
+  border: 1px solid var(--folder-color);
+  border-radius: 7px;
+  box-shadow: 0 12px 28px #0009;
+  font-size: 14px;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+.sidebar-folder-drag-preview strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sidebar-folder-drag-preview b {
+  margin-left: auto;
+  font-size: 11px;
+}
+.folder-dropzone-dragging {
+  opacity: 0.58;
+}
+.folder-drag-preview {
+  position: fixed;
+  z-index: 110;
+  top: var(--folder-drag-y);
+  left: var(--folder-drag-x);
+  display: flex;
+  align-items: flex-start;
+  min-height: 0;
+  padding: 12px;
+  border: 1px solid var(--folder-color);
+  border-radius: 8px;
+  box-shadow: 0 12px 28px #0009;
+  font-size: 14px;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+.folder-drag-preview strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.folder-drag-preview span {
+  display: grid;
+  min-width: 19px;
+  height: 19px;
+  margin-left: auto;
+  place-items: center;
+  color: #09090b;
+  background: #fff;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 800;
+}

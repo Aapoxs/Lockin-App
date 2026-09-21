@@ -1,21 +1,31 @@
 import type { DragEvent, ReactNode } from "react";
-import type { Column, Task } from "../workspace/workspaceTypes";
+import type { Column, Folder, Task } from "../workspace/workspaceTypes";
+import { FolderTaskPicker } from "./FolderTaskPicker";
 
 type KanbanPageProps = {
   tasks: Task[];
+  availableTasks: Task[];
+  folders: Folder[];
   renderTask: (task: Task) => ReactNode;
   onDropTask: (event: DragEvent<HTMLElement>, column: Column) => void;
+  onAddTaskToKanban: (taskId: string) => void;
 };
 
 const columns: Column[] = ["To do", "Doing", "Done"];
 
 /** Kanban presentation; task mutation remains with the workspace coordinator. */
-export function KanbanPage({ tasks, renderTask, onDropTask }: KanbanPageProps) {
+export function KanbanPage({
+  tasks,
+  availableTasks,
+  folders,
+  renderTask,
+  onDropTask,
+  onAddTaskToKanban,
+}: KanbanPageProps) {
   return (
     <section className="kanban-page" aria-labelledby="kanban-title">
       <header className="kanban-heading">
         <div>
-          <p className="eyebrow">Task flow</p>
           <h1 id="kanban-title">Kanban</h1>
           <p>
             Move active tasks between stages; completed tasks are archived separately.
@@ -33,7 +43,20 @@ export function KanbanPage({ tasks, renderTask, onDropTask }: KanbanPageProps) {
               onDrop={(event) => onDropTask(event, column)}
             >
               <header>
-                <h2>{column}</h2>
+                <div className="kanban-column-heading">
+                  <h2>{column}</h2>
+                  {column === "To do" && (
+                    <FolderTaskPicker
+                      activeTasks={availableTasks}
+                      folders={folders}
+                      label="+ Add task"
+                      className="kanban-task-picker"
+                      onSelectTask={(taskId) => {
+                        if (taskId) onAddTaskToKanban(taskId);
+                      }}
+                    />
+                  )}
+                </div>
                 <span>{columnTasks.length}</span>
               </header>
               <div>{columnTasks.map(renderTask)}</div>

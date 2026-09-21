@@ -47,24 +47,19 @@ import { loadPomodoro, POMODORO_STORAGE_KEY } from "./pomodoro/pomodoroStorage";
 import { TaskCard } from "./components/TaskCard";
 import { UtilityBar } from "./components/UtilityBar";
 import {
-  columns,
   folderGroups,
   maxTaskNoteLength,
   maxTaskTitleLength,
-  recurrences,
-  repeatLimits,
-  taskModes,
-  taskStatuses,
-  tones,
 } from "./workspace/workspaceConstants";
 import {
   formatCalendarRemaining,
   formatDueDate,
   formatRemaining,
   formatScheduledAt,
+  isDueDateWithinNextTwoMonths,
   taskModeLabel,
 } from "./workspace/workspaceFormatters";
-import { isHexColor, isValidWorkspaceSnapshot } from "./workspace/workspaceValidation";
+import { isHexColor, migrateWorkspaceSnapshot } from "./workspace/workspaceValidation";
 import type {
   CalendarEntry,
   CalendarView,
@@ -79,7 +74,6 @@ import type {
   StoredPomodoro,
   Task,
   TaskMode,
-  TaskStatus,
   WorkspaceSnapshot,
 } from "./workspace/workspaceTypes";
 
@@ -91,7 +85,15 @@ const themePresets = [
   { id: "ocean", label: "Ocean", main: "#0f172a", text: "#e0f2fe" },
   { id: "forest", label: "Forest", main: "#10251d", text: "#ecfdf5" },
   { id: "plum", label: "Plum", main: "#25152e", text: "#fae8ff" },
+  { id: "aquamarine", label: "Aquamarine", main: "#7fffd4", text: "#062b25" },
 ] as const;
+
+const isLightTheme = (color: string) => {
+  const red = Number.parseInt(color.slice(1, 3), 16);
+  const green = Number.parseInt(color.slice(3, 5), 16);
+  const blue = Number.parseInt(color.slice(5, 7), 16);
+  return red * 0.2126 + green * 0.7152 + blue * 0.0722 > 160;
+};
 
 const normalizeTaskTitle = (value: string) =>
   value.replace(/\s*[\r\n]+\s*/g, " ").slice(0, maxTaskTitleLength);
@@ -122,6 +124,8 @@ export function WorkspacePreview() {
   const [collapsedFolderGroups, setCollapsedFolderGroups] = useState<Set<FolderGroup>>(
     () => new Set(),
   );
+  const [folderGroupButtonFlash, setFolderGroupButtonFlash] =
+    useState<FolderGroup | null>(null);
   const [isRenamingFolder, setIsRenamingFolder] = useState(false);
   const [renameValue, setRenameValue] = useState("");
   const [folderCreationLocation, setFolderCreationLocation] = useState<
@@ -141,7 +145,6 @@ export function WorkspacePreview() {
   const [editTaskTitle, setEditTaskTitle] = useState("");
   const [editTaskNote, setEditTaskNote] = useState("");
   const [editTaskMode, setEditTaskMode] = useState<TaskMode>("one-time");
-  const [editTaskRecurrence, setEditTaskRecurrence] = useState<Recurrence>("weekly");
   const [editTaskDeadline, setEditTaskDeadline] = useState("");
   const [editTaskDeadlineHour, setEditTaskDeadlineHour] = useState(9);
 
@@ -171,6 +174,19 @@ export function WorkspacePreview() {
   const [selectedPomodoroTaskId, setSelectedPomodoroTaskId] = useState<string | null>(
     initialPomodoro.selectedTaskId,
   );
+  const [pomodoroQueueTaskIds, setPomodoroQueueTaskIds] = useState(
+    initialPomodoro.queueTaskIds,
+  );
+  const [arePomodoroBreaksEnabled, setArePomodoroBreaksEnabled] = useState(
+    initialPomodoro.breaksEnabled,
+  );
+  const [pomodoroBreakMinutes, setPomodoroBreakMinutes] = useState(
+    initialPomodoro.breakMinutes,
+  );
+  const [isPomodoroBreak, setIsPomodoroBreak] = useState(initialPomodoro.isBreakSession);
+  const [isAutomaticPomodoroQueueEnabled, setIsAutomaticPomodoroQueueEnabled] = useState(
+    initialPomodoro.isAutomaticQueueEnabled,
+  );
   const [focusSessions, setFocusSessions] = useState<FocusSession[]>([]);
   const [showAllRecurringUpNext, setShowAllRecurringUpNext] = useState(false);
   const [themeMain, setThemeMain] = useState("#09090b");
@@ -180,6 +196,7 @@ export function WorkspacePreview() {
   const backupInputRef = useRef<HTMLInputElement>(null);
   const weekCalendarRef = useRef<HTMLDivElement>(null);
   const draggedTaskIdRef = useRef<string | null>(null);
+  const folderGroupButtonFlashTimer = useRef<number | null>(null);
 
   // Load and persist the local workspace
   useEffect(() => {
@@ -199,6 +216,18 @@ export function WorkspacePreview() {
           );
         if (Array.isArray(snapshot?.focusSessions))
           setFocusSessions(snapshot.focusSessions);
+        if (snapshot?.pomodoro) {
+          setPomodoroDurationMinutes(snapshot.pomodoro.durationMinutes);
+          setPomodoroSeconds(snapshot.pomodoro.remainingSeconds);
+          setPomodoroEndsAt(snapshot.pomodoro.endsAt);
+          setSelectedPomodoroTaskId(snapshot.pomodoro.selectedTaskId);
+          setPomodoroQueueTaskIds(snapshot.pomodoro.queueTaskIds);
+          setArePomodoroBreaksEnabled(snapshot.pomodoro.breaksEnabled);
+          setPomodoroBreakMinutes(snapshot.pomodoro.breakMinutes);
+          setIsPomodoroBreak(snapshot.pomodoro.isBreakSession);
+          setIsAutomaticPomodoroQueueEnabled(snapshot.pomodoro.isAutomaticQueueEnabled);
+          setIsPomodoroRunning(Boolean(snapshot.pomodoro.endsAt));
+        }
         const preferences = snapshot?.preferences;
         if (typeof preferences?.showAllRecurringUpNext === "boolean")
           setShowAllRecurringUpNext(preferences.showAllRecurringUpNext);
@@ -226,6 +255,29 @@ export function WorkspacePreview() {
     };
   }, []);
 
+  useEffect(
+    () => () => {
+      if (folderGroupButtonFlashTimer.current !== null)
+        window.clearTimeout(folderGroupButtonFlashTimer.current);
+    },
+    [],
+  );
+
+  // Keep the sidebar's visible/hidden state when the viewport crosses the drawer breakpoint.
+  useEffect(() => {
+    const mobileViewport = window.matchMedia("(max-width: 1100px)");
+    let wasMobile = mobileViewport.matches;
+    const preserveSidebarState = () => {
+      const isMobile = mobileViewport.matches;
+      if (isMobile === wasMobile) return;
+      if (isMobile) setIsNavigationOpen(!isSidebarCollapsed);
+      else setIsSidebarCollapsed(!isNavigationOpen);
+      wasMobile = isMobile;
+    };
+    mobileViewport.addEventListener("change", preserveSidebarState);
+    return () => mobileViewport.removeEventListener("change", preserveSidebarState);
+  }, [isNavigationOpen, isSidebarCollapsed]);
+
   useEffect(() => {
     if (!isWorkspaceReady) return;
     const saveTimer = window.setTimeout(() => {
@@ -235,6 +287,17 @@ export function WorkspacePreview() {
         calendarEntries,
         focusSessions,
         preferences: { showAllRecurringUpNext, themeMain, themeText },
+        pomodoro: {
+          durationMinutes: pomodoroDurationMinutes,
+          remainingSeconds: pomodoroSeconds,
+          endsAt: pomodoroEndsAt,
+          selectedTaskId: selectedPomodoroTaskId,
+          queueTaskIds: pomodoroQueueTaskIds,
+          breaksEnabled: arePomodoroBreaksEnabled,
+          breakMinutes: pomodoroBreakMinutes,
+          isBreakSession: isPomodoroBreak,
+          isAutomaticQueueEnabled: isAutomaticPomodoroQueueEnabled,
+        },
       };
       void saveWorkspace(snapshot)
         .then(() =>
@@ -251,9 +314,18 @@ export function WorkspacePreview() {
     return () => window.clearTimeout(saveTimer);
   }, [
     calendarEntries,
+    arePomodoroBreaksEnabled,
     focusSessions,
     folders,
     isWorkspaceReady,
+    isAutomaticPomodoroQueueEnabled,
+    isPomodoroBreak,
+    pomodoroBreakMinutes,
+    pomodoroDurationMinutes,
+    pomodoroEndsAt,
+    pomodoroQueueTaskIds,
+    pomodoroSeconds,
+    selectedPomodoroTaskId,
     showAllRecurringUpNext,
     tasks,
     themeMain,
@@ -379,14 +451,38 @@ export function WorkspacePreview() {
         remainingSeconds: pomodoroSeconds,
         endsAt: pomodoroEndsAt,
         selectedTaskId: selectedPomodoroTaskId,
+        queueTaskIds: pomodoroQueueTaskIds,
+        breaksEnabled: arePomodoroBreaksEnabled,
+        breakMinutes: pomodoroBreakMinutes,
+        isBreakSession: isPomodoroBreak,
+        isAutomaticQueueEnabled: isAutomaticPomodoroQueueEnabled,
       } satisfies StoredPomodoro),
     );
-  }, [pomodoroDurationMinutes, pomodoroEndsAt, pomodoroSeconds, selectedPomodoroTaskId]);
+  }, [
+    arePomodoroBreaksEnabled,
+    isPomodoroBreak,
+    isAutomaticPomodoroQueueEnabled,
+    pomodoroBreakMinutes,
+    pomodoroDurationMinutes,
+    pomodoroEndsAt,
+    pomodoroQueueTaskIds,
+    pomodoroSeconds,
+    selectedPomodoroTaskId,
+  ]);
 
   useEffect(() => {
     if (pomodoroSeconds !== 0 || !isPomodoroRunning) return;
     setIsPomodoroRunning(false);
     setPomodoroEndsAt(null);
+    if (isPomodoroBreak) {
+      setIsPomodoroBreak(false);
+      setPomodoroSeconds(pomodoroDurationMinutes * 60);
+      if (isAutomaticPomodoroQueueEnabled && pomodoroQueueTaskIds[0]) {
+        setSelectedPomodoroTaskId(pomodoroQueueTaskIds[0]);
+        setPomodoroQueueTaskIds((current) => current.slice(1));
+      }
+      return;
+    }
     if (!selectedPomodoroTaskId) return;
     const completedAt = new Date();
     const activeEntry = calendarEntries.find(
@@ -406,12 +502,31 @@ export function WorkspacePreview() {
         duration: pomodoroDurationMinutes * 60,
       },
     ]);
+    const remainingQueue = pomodoroQueueTaskIds.filter(
+      (taskId) => taskId !== selectedPomodoroTaskId,
+    );
+    setPomodoroQueueTaskIds(remainingQueue);
+    if (arePomodoroBreaksEnabled) {
+      const breakSeconds = pomodoroBreakMinutes * 60;
+      setPomodoroSeconds(breakSeconds);
+      setPomodoroEndsAt(new Date(Date.now() + breakSeconds * 1000).toISOString());
+      setIsPomodoroBreak(true);
+      setIsPomodoroRunning(true);
+    } else if (isAutomaticPomodoroQueueEnabled && remainingQueue[0]) {
+      setSelectedPomodoroTaskId(remainingQueue[0]);
+      setPomodoroQueueTaskIds(remainingQueue.slice(1));
+    }
   }, [
+    arePomodoroBreaksEnabled,
     pomodoroDurationMinutes,
+    pomodoroBreakMinutes,
     pomodoroSeconds,
     isPomodoroRunning,
+    isPomodoroBreak,
+    isAutomaticPomodoroQueueEnabled,
     selectedPomodoroTaskId,
     calendarEntries,
+    pomodoroQueueTaskIds,
   ]);
 
   // Calendar operations
@@ -425,12 +540,14 @@ export function WorkspacePreview() {
     setTasks((current) => {
       const movingTask = current.find((task) => task.id === movingTaskId);
       const targetTask = current.find((task) => task.id === targetTaskId);
-      if (!movingTask || !targetTask || movingTask.destination !== targetTask.destination)
-        return current;
+      if (!movingTask || !targetTask) return current;
       const next = current.filter((task) => task.id !== movingTaskId);
       const targetIndex = next.findIndex((task) => task.id === targetTaskId);
       if (targetIndex < 0) return current;
-      next.splice(targetIndex + 1, 0, movingTask);
+      next.splice(targetIndex, 0, {
+        ...movingTask,
+        destination: targetTask.destination,
+      });
       return next;
     });
   };
@@ -438,11 +555,10 @@ export function WorkspacePreview() {
   const reorderFolders = (movingFolderId: string, targetFolderId: string) => {
     if (!movingFolderId || movingFolderId === targetFolderId) return;
     setFolders((current) => {
-      const movingIndex = current.findIndex((folder) => folder.id === movingFolderId);
-      const targetIndex = current.findIndex((folder) => folder.id === targetFolderId);
-      if (movingIndex < 0 || targetIndex < 0) return current;
-      const next = [...current];
-      const [movingFolder] = next.splice(movingIndex, 1);
+      const movingFolder = current.find((folder) => folder.id === movingFolderId);
+      const next = current.filter((folder) => folder.id !== movingFolderId);
+      const targetIndex = next.findIndex((folder) => folder.id === targetFolderId);
+      if (!movingFolder || targetIndex < 0) return current;
       next.splice(targetIndex, 0, movingFolder);
       return next;
     });
@@ -697,7 +813,9 @@ export function WorkspacePreview() {
   });
   const moveTaskColumn = (taskId: string, column: Column) =>
     setTasks((current) =>
-      current.map((task) => (task.id === taskId ? { ...task, column } : task)),
+      current.map((task) =>
+        task.id === taskId ? { ...task, column, isInKanban: true } : task,
+      ),
     );
 
   const startPomodoro = () => {
@@ -705,7 +823,8 @@ export function WorkspacePreview() {
     setPomodoroSeconds(seconds);
     setPomodoroEndsAt(new Date(Date.now() + seconds * 1000).toISOString());
     setIsPomodoroRunning(true);
-    if (selectedPomodoroTaskId) moveTaskColumn(selectedPomodoroTaskId, "Doing");
+    if (selectedPomodoroTaskId && !isPomodoroBreak)
+      moveTaskColumn(selectedPomodoroTaskId, "Doing");
   };
   const pausePomodoro = () => {
     setIsPomodoroRunning(false);
@@ -715,6 +834,7 @@ export function WorkspacePreview() {
     setIsPomodoroRunning(false);
     setPomodoroEndsAt(null);
     setPomodoroSeconds(pomodoroDurationMinutes * 60);
+    setIsPomodoroBreak(false);
   };
   const setPomodoroDuration = (minutes: number) => {
     const duration = Math.max(1, Math.min(240, Math.round(minutes) || 25));
@@ -783,7 +903,8 @@ export function WorkspacePreview() {
     event.dataTransfer.setData("application/x-focusboard-task", taskId);
     event.dataTransfer.setData("text/plain", `task:${taskId}`);
     event.dataTransfer.effectAllowed = "copyMove";
-    setCalendarSlotDragPreview(event);
+    if (!event.currentTarget.classList.contains("task-card"))
+      setCalendarSlotDragPreview(event);
   };
 
   const clearDraggedTask = () => {
@@ -874,13 +995,22 @@ export function WorkspacePreview() {
         folder.id === folderId ? { ...folder, hideFromUpNext } : folder,
       ),
     );
-  const toggleFolderGroupCollapsed = (group: FolderGroup) =>
+  const toggleFolderGroupCollapsed = (group: FolderGroup) => {
     setCollapsedFolderGroups((current) => {
       const next = new Set(current);
       if (next.has(group)) next.delete(group);
       else next.add(group);
       return next;
     });
+    if (!window.matchMedia("(max-width: 760px)").matches) return;
+    if (folderGroupButtonFlashTimer.current !== null)
+      window.clearTimeout(folderGroupButtonFlashTimer.current);
+    setFolderGroupButtonFlash(group);
+    folderGroupButtonFlashTimer.current = window.setTimeout(
+      () => setFolderGroupButtonFlash(null),
+      1000,
+    );
+  };
 
   const removeFolder = (folder: Folder) => {
     if (!window.confirm(`Remove ${folder.name}? Tasks in it will return to Main.`))
@@ -908,6 +1038,7 @@ export function WorkspacePreview() {
         detail,
         tone: "neutral",
         column: "To do",
+        isInKanban: false,
         destination: "Main",
         mode: taskMode,
         status: "active",
@@ -941,7 +1072,6 @@ export function WorkspacePreview() {
     setEditTaskTitle(task.title);
     setEditTaskNote(task.detail === "No note" ? "" : task.detail);
     setEditTaskMode(task.mode);
-    setEditTaskRecurrence(task.recurrence ?? "weekly");
     setEditTaskDeadline(task.dueDate ?? "");
     setEditTaskDeadlineHour(task.dueHour ?? 9);
   };
@@ -989,7 +1119,8 @@ export function WorkspacePreview() {
 
   const dropOn = (event: DragEvent<HTMLElement>, destination: Destination) => {
     event.preventDefault();
-    const taskId = getDraggedTaskId(event);
+    const taskId =
+      getDraggedTaskId(event) || draggedTaskIdRef.current || draggedTaskId || "";
     if (taskId) {
       moveTask(taskId, destination);
       return;
@@ -1018,7 +1149,11 @@ export function WorkspacePreview() {
       key={task.id}
       task={task}
       summary={task.detail === "No note" ? "" : task.detail}
-      dueText={task.dueDate ? `Due ${formatDueDate(task.dueDate)}` : ""}
+      dueText={
+        task.dueDate && isDueDateWithinNextTwoMonths(task.dueDate, now)
+          ? formatDueDate(task.dueDate)
+          : ""
+      }
       modeText={taskModeLabel(task)}
       isOverdue={isOverdue(task)}
       onDragStart={(event) => dragTaskStart(event, task.id)}
@@ -1026,7 +1161,7 @@ export function WorkspacePreview() {
       onOpen={() => openTaskEditor(task)}
       onTouchMove={(targetFolderId, targetTaskId) => {
         const targetTask = tasks.find((candidate) => candidate.id === targetTaskId);
-        if (targetTask?.destination === task.destination) {
+        if (targetTask) {
           reorderTask(task.id, targetTask.id);
           return;
         }
@@ -1034,7 +1169,8 @@ export function WorkspacePreview() {
       }}
       onDropOnTask={(event, targetTaskId) => {
         event.preventDefault();
-        const movingTaskId = getDraggedTaskId(event);
+        const movingTaskId =
+          getDraggedTaskId(event) || draggedTaskIdRef.current || draggedTaskId || "";
         if (movingTaskId) reorderTask(movingTaskId, targetTaskId);
       }}
       onComplete={() => completeTask(task)}
@@ -1042,11 +1178,15 @@ export function WorkspacePreview() {
     />
   );
   const dropOnFolder = (event: DragEvent<HTMLElement>, targetFolderId: string) => {
-    const movingFolderId = event.dataTransfer.getData("application/x-lockin-folder");
-    if (!movingFolderId) {
+    const movingTaskId =
+      getDraggedTaskId(event) || draggedTaskIdRef.current || draggedTaskId || "";
+    if (movingTaskId) {
       dropOn(event, targetFolderId);
       return;
     }
+
+    const movingFolderId = event.dataTransfer.getData("application/x-lockin-folder");
+    if (!movingFolderId) return;
 
     event.preventDefault();
     event.stopPropagation();
@@ -1119,7 +1259,6 @@ export function WorkspacePreview() {
       onToggleRename={() => setIsRenamingFolder(!isRenamingFolder)}
       onRenameValueChange={setRenameValue}
       onRenameSubmit={renameFolder}
-      onGroupChange={updateFolderGroup}
       onColorChange={updateFolderColor}
       onUpNextVisibilityChange={setFolderUpNextVisibility}
       onRemove={removeFolder}
@@ -1129,6 +1268,14 @@ export function WorkspacePreview() {
   const activeTasks = tasks.filter((task) => task.status === "active");
   const completedTasks = tasks.filter((task) => task.status === "completed");
   const mainTasks = activeTasks.filter((task) => task.destination === "Main");
+  const nonEventTasks = activeTasks.filter(
+    (task) =>
+      (folders.find((folder) => folder.id === task.destination)?.group ??
+        "unassigned") !== "events",
+  );
+  const pomodoroTasks = nonEventTasks;
+  // The board is opt-in: tasks remain in their folders until added or focused.
+  const kanbanTasks = nonEventTasks.filter((task) => task.isInKanban === true);
   const weekStart = startOfWeek(calendarDate);
   const weekDays = Array.from({ length: 7 }, (_, index) => {
     const date = new Date(weekStart);
@@ -1238,17 +1385,73 @@ export function WorkspacePreview() {
         : `${new Intl.DateTimeFormat(undefined, { month: "short", year: "numeric" }).format(yearMonths[0])} – ${new Intl.DateTimeFormat(undefined, { month: "short", year: "numeric" }).format(yearMonths[11])}`;
   const calendarPeriodName =
     calendarView === "week" ? "week" : calendarView === "month" ? "month" : "year";
-  const selectedPomodoroTask = activeTasks.find(
+  const selectedPomodoroTask = pomodoroTasks.find(
     (task) => task.id === selectedPomodoroTaskId,
   );
-  const activePomodoroEntry = selectedPomodoroTask
-    ? activeScheduledTasks.find(
-        ({ entry, task }) =>
-          task.id === selectedPomodoroTask.id &&
-          new Date(entry.scheduledAt) <= now &&
-          now < new Date(new Date(entry.scheduledAt).getTime() + 60 * 60 * 1000),
-      )
-    : undefined;
+  useEffect(() => {
+    if (
+      selectedPomodoroTaskId &&
+      !pomodoroTasks.some((task) => task.id === selectedPomodoroTaskId)
+    )
+      setSelectedPomodoroTaskId(null);
+  }, [pomodoroTasks, selectedPomodoroTaskId]);
+  const queuedPomodoroTasks = pomodoroQueueTaskIds
+    .map((taskId) => pomodoroTasks.find((task) => task.id === taskId))
+    .filter((task): task is Task => Boolean(task));
+  const firstQueuedPomodoroTask = queuedPomodoroTasks[0];
+  useEffect(() => {
+    if (
+      !isPomodoroRunning ||
+      isPomodoroBreak ||
+      !isAutomaticPomodoroQueueEnabled ||
+      selectedPomodoroTaskId ||
+      !firstQueuedPomodoroTask
+    )
+      return;
+    setSelectedPomodoroTaskId(firstQueuedPomodoroTask.id);
+    setPomodoroQueueTaskIds((current) =>
+      current.filter((taskId) => taskId !== firstQueuedPomodoroTask.id),
+    );
+  }, [
+    firstQueuedPomodoroTask,
+    isAutomaticPomodoroQueueEnabled,
+    isPomodoroBreak,
+    isPomodoroRunning,
+    selectedPomodoroTaskId,
+  ]);
+  const clearPomodoroQueue = () => setPomodoroQueueTaskIds([]);
+  const removePomodoroQueueTask = (taskId: string) =>
+    setPomodoroQueueTaskIds((current) =>
+      current.filter((queuedTaskId) => queuedTaskId !== taskId),
+    );
+  const reorderPomodoroQueueTask = (movingTaskId: string, targetTaskId: string) => {
+    if (!movingTaskId || movingTaskId === targetTaskId) return;
+    setPomodoroQueueTaskIds((current) => {
+      const movingIndex = current.indexOf(movingTaskId);
+      const targetIndex = current.indexOf(targetTaskId);
+      if (movingIndex < 0 || targetIndex < 0) return current;
+      const next = current.filter((taskId) => taskId !== movingTaskId);
+      next.splice(next.indexOf(targetTaskId) + 1, 0, movingTaskId);
+      return next;
+    });
+  };
+  const toggleAutomaticPomodoroQueue = () =>
+    setIsAutomaticPomodoroQueueEnabled((isEnabled) => !isEnabled);
+  const addPomodoroTask = (taskId: string) => {
+    if (!selectedPomodoroTaskId) {
+      setSelectedPomodoroTaskId(taskId);
+      setPomodoroQueueTaskIds((current) =>
+        current.filter((queuedTaskId) => queuedTaskId !== taskId),
+      );
+      return;
+    }
+    if (selectedPomodoroTaskId === taskId) return;
+    setPomodoroQueueTaskIds((current) =>
+      current.includes(taskId) ? current : [...current, taskId],
+    );
+  };
+  const setPomodoroBreakLength = (minutes: number) =>
+    setPomodoroBreakMinutes(Math.max(1, Math.min(60, Math.round(minutes) || 5)));
   const calendarEntryCountdown = (entry: CalendarEntry) => {
     if (entry.status === "completed") return "Completed";
     const start = new Date(entry.scheduledAt);
@@ -1271,6 +1474,17 @@ export function WorkspacePreview() {
         calendarEntries,
         focusSessions,
         preferences: { showAllRecurringUpNext, themeMain, themeText },
+        pomodoro: {
+          durationMinutes: pomodoroDurationMinutes,
+          remainingSeconds: pomodoroSeconds,
+          endsAt: pomodoroEndsAt,
+          selectedTaskId: selectedPomodoroTaskId,
+          queueTaskIds: pomodoroQueueTaskIds,
+          breaksEnabled: arePomodoroBreaksEnabled,
+          breakMinutes: pomodoroBreakMinutes,
+          isBreakSession: isPomodoroBreak,
+          isAutomaticQueueEnabled: isAutomaticPomodoroQueueEnabled,
+        },
       } satisfies WorkspaceSnapshot,
     };
     const url = URL.createObjectURL(
@@ -1290,12 +1504,15 @@ export function WorkspacePreview() {
     if (!file) return;
     try {
       if (file.size > 5 * 1024 * 1024) throw new Error("Backup file is too large.");
-      const backup = JSON.parse(await file.text()) as Partial<StoredWorkspace>;
-      const snapshot =
-        backup.version === 1
-          ? (backup.snapshot as Partial<WorkspaceSnapshot>)
+      const backup = JSON.parse(await file.text()) as unknown;
+      const wrappedBackup =
+        typeof backup === "object" && backup !== null && "snapshot" in backup
+          ? (backup as Partial<StoredWorkspace>)
           : undefined;
-      if (!isValidWorkspaceSnapshot(snapshot)) {
+      const snapshot = migrateWorkspaceSnapshot(
+        wrappedBackup?.version === 1 ? wrappedBackup.snapshot : backup,
+      );
+      if (!snapshot) {
         throw new Error("This is not a Lockin Board backup.");
       }
       if (
@@ -1308,6 +1525,23 @@ export function WorkspacePreview() {
       setFolders(snapshot.folders);
       setCalendarEntries(snapshot.calendarEntries);
       setFocusSessions(snapshot.focusSessions);
+      setShowAllRecurringUpNext(snapshot.preferences.showAllRecurringUpNext);
+      if (isHexColor(snapshot.preferences.themeMain))
+        setThemeMain(snapshot.preferences.themeMain);
+      if (isHexColor(snapshot.preferences.themeText))
+        setThemeText(snapshot.preferences.themeText);
+      if (snapshot.pomodoro) {
+        setPomodoroDurationMinutes(snapshot.pomodoro.durationMinutes);
+        setPomodoroSeconds(snapshot.pomodoro.remainingSeconds);
+        setPomodoroEndsAt(snapshot.pomodoro.endsAt);
+        setSelectedPomodoroTaskId(snapshot.pomodoro.selectedTaskId);
+        setPomodoroQueueTaskIds(snapshot.pomodoro.queueTaskIds);
+        setArePomodoroBreaksEnabled(snapshot.pomodoro.breaksEnabled);
+        setPomodoroBreakMinutes(snapshot.pomodoro.breakMinutes);
+        setIsPomodoroBreak(snapshot.pomodoro.isBreakSession);
+        setIsAutomaticPomodoroQueueEnabled(snapshot.pomodoro.isAutomaticQueueEnabled);
+        setIsPomodoroRunning(Boolean(snapshot.pomodoro.endsAt));
+      }
       setStorageStatus("Backup restored · saving locally");
     } catch {
       setStorageStatus("Could not restore that backup file");
@@ -1331,6 +1565,9 @@ export function WorkspacePreview() {
       setFocusSessions([]);
       setShowAllRecurringUpNext(false);
       setSelectedPomodoroTaskId(null);
+      setPomodoroQueueTaskIds([]);
+      setIsPomodoroBreak(false);
+      setIsAutomaticPomodoroQueueEnabled(false);
       setStorageStatus("Workspace cleared · ready for a fresh start");
     } catch {
       setStorageStatus("Could not clear the local workspace");
@@ -1348,7 +1585,7 @@ export function WorkspacePreview() {
   // Page layout
   return (
     <div
-      className={`focusboard-shell custom-theme${isSidebarCollapsed ? " sidebar-collapsed" : ""}`}
+      className={`focusboard-shell custom-theme${isLightTheme(themeMain) ? " light-theme" : ""}${isSidebarCollapsed ? " sidebar-collapsed" : ""}`}
       style={
         {
           "--theme-main": themeMain,
@@ -1429,62 +1666,48 @@ export function WorkspacePreview() {
               +
             </button>
           </p>
-          {folderCreationLocation === "sidebar" && (
-            <form
-              className="folder-creator"
-              onClick={(event) => event.stopPropagation()}
-              onSubmit={(event) => {
-                event.preventDefault();
-                addFolder();
-              }}
-            >
-              <input
-                aria-label="Folder name"
-                autoFocus
-                value={folderName}
-                onChange={(event) => setFolderName(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Escape") setFolderCreationLocation(null);
-                }}
-                placeholder="Folder name"
-              />
-              <button type="submit">Add</button>
-            </form>
-          )}
           <section className="sidebar-folder-groups" aria-label="Folder sections">
-            {folderGroups.map((group) => (
-              <div
-                key={group}
-                data-sidebar-folder-group={group}
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={(event) => dropOnSidebarGroup(event, group)}
-              >
-                <p className="nav-label">{group[0].toUpperCase() + group.slice(1)}</p>
-                {folders
-                  .filter((folder) => (folder.group ?? "unassigned") === group)
-                  .map((folder) => (
-                    <SidebarFolderItem
-                      key={folder.id}
-                      folder={folder}
-                      taskCount={
-                        activeTasks.filter((task) => task.destination === folder.id)
-                          .length
-                      }
-                      onDragStart={(event, folderId) => {
-                        event.stopPropagation();
-                        event.dataTransfer.effectAllowed = "move";
-                        event.dataTransfer.setData(
-                          "application/x-lockin-folder",
-                          folderId,
-                        );
-                        event.dataTransfer.setData("text/plain", `folder:${folderId}`);
-                      }}
-                      onDrop={(event) => dropOnSidebarFolder(event, folder.id)}
-                      onTouchReorder={moveSidebarFolder}
-                    />
-                  ))}
-              </div>
-            ))}
+            {folderGroups.map((group) => {
+              const groupFolders = folders.filter(
+                (folder) => (folder.group ?? "unassigned") === group,
+              );
+              if (group === "unassigned" && groupFolders.length === 0) return null;
+              return (
+                <div
+                  key={group}
+                  data-sidebar-folder-group={group}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={(event) => dropOnSidebarGroup(event, group)}
+                >
+                  <p className="nav-label">{group[0].toUpperCase() + group.slice(1)}</p>
+                  {groupFolders.length ? (
+                    groupFolders.map((folder) => (
+                      <SidebarFolderItem
+                        key={folder.id}
+                        folder={folder}
+                        taskCount={
+                          activeTasks.filter((task) => task.destination === folder.id)
+                            .length
+                        }
+                        onDragStart={(event, folderId) => {
+                          event.stopPropagation();
+                          event.dataTransfer.effectAllowed = "move";
+                          event.dataTransfer.setData(
+                            "application/x-lockin-folder",
+                            folderId,
+                          );
+                          event.dataTransfer.setData("text/plain", `folder:${folderId}`);
+                        }}
+                        onDrop={(event) => dropOnSidebarFolder(event, folder.id)}
+                        onTouchReorder={moveSidebarFolder}
+                      />
+                    ))
+                  ) : (
+                    <div className="sidebar-empty-folder-target">Empty</div>
+                  )}
+                </div>
+              );
+            })}
           </section>
           <section className="data-panel" aria-label="Data and backups">
             <p className="nav-label">Data</p>
@@ -1564,11 +1787,7 @@ export function WorkspacePreview() {
           <>
             <section className="board-heading" aria-labelledby="board-title">
               <div>
-                <p className="eyebrow">Workspace</p>
-                <h1 id="board-title">Plan your day</h1>
-                <p className="board-description">
-                  Organise tasks, see your schedule, and focus on what matters.
-                </p>
+                <h1 id="board-title">Main</h1>
               </div>
             </section>
             <MainOverview
@@ -1587,19 +1806,48 @@ export function WorkspacePreview() {
               }
               onOpenCalendarEntry={openCalendarEntry}
             />
-            <section
-              className="main-task-section"
-              aria-labelledby="tasks-title"
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={(event) => dropOn(event, "Main")}
-            >
-              <div className="main-task-header">
-                <div>
-                  <p className="eyebrow">Unassigned tasks</p>
-                  <h2 id="tasks-title">Everything waiting in Main</h2>
-                </div>
+          </>
+        ) : null}
+        {activePage === "main" && (
+          <section
+            className="folder-section folder-section-categorized"
+            aria-labelledby="folder-groups-title"
+          >
+            <div className="folder-section-heading">
+              <h2 id="folder-groups-title">Folders</h2>
+              <div className="folder-section-actions">
                 <button
-                  className="add-task"
+                  className={`folder-group-visibility-button${
+                    folderGroupButtonFlash === "tasks"
+                      ? " folder-group-visibility-flash"
+                      : ""
+                  }`}
+                  type="button"
+                  onClick={(event) => {
+                    if (window.matchMedia("(max-width: 760px)").matches)
+                      event.currentTarget.blur();
+                    toggleFolderGroupCollapsed("tasks");
+                  }}
+                >
+                  {collapsedFolderGroups.has("tasks") ? "Show Tasks" : "Hide Tasks"}
+                </button>
+                <button
+                  className={`folder-group-visibility-button${
+                    folderGroupButtonFlash === "events"
+                      ? " folder-group-visibility-flash"
+                      : ""
+                  }`}
+                  type="button"
+                  onClick={(event) => {
+                    if (window.matchMedia("(max-width: 760px)").matches)
+                      event.currentTarget.blur();
+                    toggleFolderGroupCollapsed("events");
+                  }}
+                >
+                  {collapsedFolderGroups.has("events") ? "Show Events" : "Hide Events"}
+                </button>
+                <button
+                  className="folder-add-button"
                   type="button"
                   onClick={() => setIsTaskComposerOpen(true)}
                 >
@@ -1615,33 +1863,6 @@ export function WorkspacePreview() {
                     <path d="M12 5v14M5 12h14" />
                   </svg>
                   Task
-                </button>
-              </div>
-              <div className="main-task-list">{mainTasks.map(taskCard)}</div>
-            </section>
-          </>
-        ) : null}
-        {activePage === "main" && (
-          <section
-            className="folder-section folder-section-categorized"
-            aria-labelledby="folder-groups-title"
-          >
-            <div className="folder-section-heading">
-              <h2 id="folder-groups-title">Folders</h2>
-              <div className="folder-section-actions">
-                <button
-                  className="folder-group-visibility-button"
-                  type="button"
-                  onClick={() => toggleFolderGroupCollapsed("tasks")}
-                >
-                  {collapsedFolderGroups.has("tasks") ? "Show Tasks" : "Hide Tasks"}
-                </button>
-                <button
-                  className="folder-group-visibility-button"
-                  type="button"
-                  onClick={() => toggleFolderGroupCollapsed("events")}
-                >
-                  {collapsedFolderGroups.has("events") ? "Show Events" : "Hide Events"}
                 </button>
                 <button
                   className="folder-add-button"
@@ -1663,27 +1884,34 @@ export function WorkspacePreview() {
                 </button>
               </div>
             </div>
-            {folderCreationLocation === "main" && (
-              <form
-                className="folder-create-inline"
-                onClick={(event) => event.stopPropagation()}
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  addFolder();
-                }}
+            {mainTasks.length > 0 && (
+              <section
+                className="folder-dropzone unassigned-task-folder"
+                data-folder-id="Main"
+                style={{ "--folder-color": "#a78bfa" } as CSSProperties}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => dropOn(event, "Main")}
+                aria-label="Unassigned tasks"
               >
-                <input
-                  aria-label="Folder name"
-                  autoFocus
-                  value={folderName}
-                  onChange={(event) => setFolderName(event.target.value)}
-                  placeholder="Folder name"
-                />
-                <button type="submit">Create folder</button>
-                <button type="button" onClick={() => setFolderCreationLocation(null)}>
-                  Cancel
-                </button>
-              </form>
+                <header>
+                  <h3>Unassigned tasks</h3>
+                  <span>{mainTasks.length}</span>
+                </header>
+                <div className="folder-task-list">{mainTasks.map(taskCard)}</div>
+              </section>
+            )}
+            {folders.some(
+              (folder) => (folder.group ?? "unassigned") === "unassigned",
+            ) && (
+              <FolderGroupPanel
+                group="unassigned"
+                label="Unassigned"
+                folders={folders.filter(
+                  (folder) => (folder.group ?? "unassigned") === "unassigned",
+                )}
+                onMoveFolder={updateFolderGroup}
+                renderFolder={folderCard}
+              />
             )}
             <div
               className={`folder-groups${
@@ -1715,20 +1943,6 @@ export function WorkspacePreview() {
                 />
               )}
             </div>
-            {(folderCreationLocation === "main" ||
-              folders.some(
-                (folder) => (folder.group ?? "unassigned") === "unassigned",
-              )) && (
-              <FolderGroupPanel
-                group="unassigned"
-                label="Unassigned"
-                folders={folders.filter(
-                  (folder) => (folder.group ?? "unassigned") === "unassigned",
-                )}
-                onMoveFolder={updateFolderGroup}
-                renderFolder={folderCard}
-              />
-            )}
           </section>
         )}
         {activePage === "calendar" && (
@@ -1993,7 +2207,13 @@ export function WorkspacePreview() {
             timerText={formatRemaining(pomodoroSeconds)}
             durationMinutes={pomodoroDurationMinutes}
             isRunning={isPomodoroRunning}
-            activeTasks={activeTasks}
+            isBreakSession={isPomodoroBreak}
+            breaksEnabled={arePomodoroBreaksEnabled}
+            breakMinutes={pomodoroBreakMinutes}
+            activeTasks={pomodoroTasks}
+            folders={folders}
+            queuedTasks={queuedPomodoroTasks}
+            isAutomaticQueueEnabled={isAutomaticPomodoroQueueEnabled}
             selectedTask={selectedPomodoroTask}
             selectedTaskSummary={
               selectedPomodoroTask
@@ -2004,22 +2224,27 @@ export function WorkspacePreview() {
                   }`
                 : ""
             }
-            calendarStatusText={
-              activePomodoroEntry
-                ? `Calendar now · ${calendarEntryCountdown(activePomodoroEntry.entry)}`
-                : undefined
-            }
             onDurationChange={setPomodoroDuration}
             onToggleTimer={isPomodoroRunning ? pausePomodoro : startPomodoro}
             onReset={resetPomodoro}
-            onSelectTask={setSelectedPomodoroTaskId}
+            onSelectTask={addPomodoroTask}
+            onClearLinkedTask={() => setSelectedPomodoroTaskId(null)}
+            onBreaksEnabledChange={setArePomodoroBreaksEnabled}
+            onBreakMinutesChange={setPomodoroBreakLength}
+            onClearQueue={clearPomodoroQueue}
+            onToggleAutomaticQueue={toggleAutomaticPomodoroQueue}
+            onReorderQueueTask={reorderPomodoroQueueTask}
+            onRemoveQueueTask={removePomodoroQueueTask}
             onCompleteTask={completeTask}
           />
         )}
         {activePage === "kanban" && (
           <KanbanPage
-            tasks={activeTasks}
+            tasks={kanbanTasks}
+            availableTasks={pomodoroTasks}
+            folders={folders}
             renderTask={taskCard}
+            onAddTaskToKanban={(taskId) => moveTaskColumn(taskId, "To do")}
             onDropTask={(event, column) => {
               event.preventDefault();
               const taskId = getDraggedTaskId(event);
@@ -2031,7 +2256,6 @@ export function WorkspacePreview() {
           <section className="completed-page" aria-labelledby="completed-title">
             <header>
               <div>
-                <p className="eyebrow">Daily progress & archive</p>
                 <h1 id="completed-title">Completed</h1>
                 <p>
                   See today’s scheduled work separately from tasks that are permanently
@@ -2248,8 +2472,7 @@ export function WorkspacePreview() {
               addTask();
             }}
           >
-            <p className="eyebrow">New task</p>
-            <h2>Add to Main</h2>
+            <h2>New Task</h2>
             <label htmlFor="task-title">
               Task title (up to {maxTaskTitleLength} characters)
             </label>
@@ -2319,6 +2542,49 @@ export function WorkspacePreview() {
               </button>
               <button className="primary-action" type="submit">
                 Create task
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+      {folderCreationLocation && (
+        <div
+          className="dialog-backdrop"
+          role="presentation"
+          onClick={() => setFolderCreationLocation(null)}
+        >
+          <form
+            className="task-composer folder-composer"
+            aria-label="Create folder"
+            onClick={(event) => event.stopPropagation()}
+            onSubmit={(event) => {
+              event.preventDefault();
+              addFolder();
+            }}
+          >
+            <h2>New Folder</h2>
+            <input
+              id="folder-name"
+              aria-label="Folder name"
+              autoFocus
+              required
+              value={folderName}
+              onChange={(event) => setFolderName(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") setFolderCreationLocation(null);
+              }}
+              placeholder="Name your folder"
+            />
+            <div>
+              <button
+                className="cancel-button"
+                type="button"
+                onClick={() => setFolderCreationLocation(null)}
+              >
+                Cancel
+              </button>
+              <button className="primary-action" type="submit">
+                Create folder
               </button>
             </div>
           </form>

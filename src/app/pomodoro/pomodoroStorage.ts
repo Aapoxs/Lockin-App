@@ -7,6 +7,11 @@ export const defaultPomodoro: StoredPomodoro = {
   remainingSeconds: 25 * 60,
   endsAt: null,
   selectedTaskId: null,
+  queueTaskIds: [],
+  breaksEnabled: false,
+  breakMinutes: 5,
+  isBreakSession: false,
+  isAutomaticQueueEnabled: false,
 };
 
 export const loadPomodoro = (): StoredPomodoro => {
@@ -36,6 +41,20 @@ export const loadPomodoro = (): StoredPomodoro => {
       endsAt: remainingSeconds > 0 ? endsAt : null,
       selectedTaskId:
         typeof stored.selectedTaskId === "string" ? stored.selectedTaskId : null,
+      queueTaskIds: Array.isArray(stored.queueTaskIds)
+        ? stored.queueTaskIds.filter(
+            (taskId): taskId is string => typeof taskId === "string",
+          )
+        : [],
+      breaksEnabled: stored.breaksEnabled === true,
+      breakMinutes:
+        Number.isInteger(stored.breakMinutes) &&
+        (stored.breakMinutes as number) >= 1 &&
+        (stored.breakMinutes as number) <= 60
+          ? (stored.breakMinutes as number)
+          : 5,
+      isBreakSession: stored.isBreakSession === true && remainingSeconds > 0,
+      isAutomaticQueueEnabled: stored.isAutomaticQueueEnabled === true,
     };
   } catch {
     return defaultPomodoro;

@@ -1,9 +1,21 @@
 import type { Task } from "./workspaceTypes";
 
-export const formatDueDate = (dateKey: string) =>
-  new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(
-    new Date(`${dateKey}T12:00:00`),
-  );
+export const formatDueDate = (dateKey: string) => {
+  const date = new Date(`${dateKey}T12:00:00`);
+  return `${date.getDate()}.${date.getMonth() + 1}`;
+};
+
+export const isDueDateWithinNextTwoMonths = (dateKey: string, referenceDate: Date) => {
+  const start = new Date(referenceDate);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(start);
+  end.setMonth(end.getMonth() + 2);
+  end.setHours(23, 59, 59, 999);
+
+  const dueDate = new Date(`${dateKey}T12:00:00`);
+  return dueDate >= start && dueDate <= end;
+};
 
 export const formatScheduledAt = (scheduledAt: string) =>
   new Intl.DateTimeFormat(undefined, {

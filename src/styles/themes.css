@@ -1,0 +1,788 @@
+/* White, blue and cyan visual system */
+:root {
+  color: #0f172a;
+  background: #f8fbff;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline-color: #38bdf8;
+}
+.focusboard-shell {
+  background: #f8fbff;
+}
+.sidebar {
+  color: #334155;
+  background: #fff;
+  border-right-color: #dbeafe;
+}
+.brand {
+  color: #0f172a;
+}
+.brand-mark {
+  color: #fff;
+  background: #0ea5e9;
+}
+.create-button,
+.primary-action {
+  background: #0284c7;
+  box-shadow: 0 5px 12px #0284c729;
+}
+.nav-label {
+  color: #64748b;
+}
+.folders-label button {
+  color: #0284c7;
+}
+.nav-item {
+  color: #334155;
+}
+.nav-item b {
+  color: #64748b;
+}
+.nav-item-selected {
+  color: #075985;
+  background: #e0f2fe;
+}
+.folder-creator input {
+  border-color: #bfdbfe;
+  color: #0f172a;
+}
+.folder-creator button {
+  background: #0284c7;
+}
+.timer {
+  color: #334155;
+  background: #fff;
+  border-color: #dbeafe;
+  box-shadow: 0 2px 8px #0f5aa50d;
+}
+.timer-dot {
+  background: #22d3ee;
+  box-shadow: 0 0 0 3px #cffafe;
+}
+.timer strong {
+  color: #0f172a;
+}
+.timer button {
+  color: #0369a1;
+  background: #e0f2fe;
+}
+.mobile-menu-button span {
+  background: #0f172a;
+}
+.eyebrow {
+  color: #0284c7;
+}
+.board-heading h1,
+.empty-page h1,
+.calendar-page h1 {
+  color: #0f172a;
+}
+.board-description {
+  color: #475569;
+}
+.main-task-section,
+.urgent-section {
+  background: #f0f9ff;
+  border: 1px solid #dbeafe;
+}
+.calendar-section {
+  background: #fff;
+  border-color: #dbeafe;
+}
+.main-task-header h2,
+.urgent-section h2,
+.calendar-section h2,
+.folder-section h2,
+.kanban-heading h1,
+.kanban-column h2 {
+  color: #0f172a;
+}
+.main-task-header .add-task,
+.calendar-section header button {
+  color: #0284c7;
+}
+.urgent-section header > span {
+  color: #075985;
+  background: #dbeafe;
+}
+.urgent-task,
+.task-card {
+  background: #fff;
+  border-color: #dbeafe;
+  box-shadow: 0 4px 14px #0f5aa50a;
+}
+.urgent-task h3,
+.task-card h3 {
+  color: #0f172a;
+}
+.urgent-task p,
+.task-card p,
+.overview-empty {
+  color: #475569;
+}
+.urgent-arrow {
+  color: #94a3b8;
+}
+.task-accent-warm,
+.task-accent-cool,
+.task-accent-neutral,
+.task-accent-focus,
+.task-accent-done {
+  background: #38bdf8;
+}
+.calendar-day {
+  background: #f0f9ff;
+  border: 1px solid #e0f2fe;
+}
+.calendar-day > span {
+  color: #475569;
+}
+.calendar-day > span b {
+  color: #0f172a;
+}
+.calendar-event-warm,
+.calendar-event-cool,
+.calendar-event-focus {
+  color: #075985;
+  background: #e0f7ff;
+}
+.task-tag,
+.task-tag-warm,
+.task-tag-cool,
+.task-tag-neutral,
+.task-tag-focus,
+.task-tag-done {
+  color: #0369a1;
+  background: #e0f2fe;
+}
+.folder-section {
+  border-top-color: #dbeafe;
+}
+.folder-dropzone {
+  background: #fff;
+}
+.folder-dropzone h3 {
+  color: #0f172a;
+}
+.folder-dropzone header > span:last-child {
+  color: #075985;
+  background: #e0f2fe;
+}
+.folder-menu-button {
+  color: #64748b;
+}
+.folder-menu-button:hover {
+  color: #0369a1;
+  background: #e0f2fe;
+}
+.folder-icon {
+  color: #0284c7;
+}
+.folder-dropzone > p {
+  color: #64748b;
+}
+.folder-menu {
+  border-color: #dbeafe;
+  box-shadow: 0 12px 30px #0f5aa51a;
+}
+.folder-menu > button,
+.folder-menu form button {
+  color: #1e293b;
+}
+.folder-menu > button:hover {
+  color: #0369a1;
+  background: #e0f2fe;
+}
+.folder-menu form input {
+  border-color: #bfdbfe;
+  color: #0f172a;
+}
+.folder-menu form button {
+  color: #0369a1;
+  background: #e0f2fe;
+}
+.folder-color-control {
+  color: #334155;
+  border-color: #e0f2fe;
+}
+.calendar-task-toggle {
+  border-color: #bae6fd;
+  background: #fff;
+}
+.calendar-task-toggle:hover,
+.calendar-task-toggle[aria-expanded="true"] {
+  border-color: #38bdf8;
+  background: #f0f9ff;
+}
+.calendar-task-toggle span {
+  background: #0284c7;
+}
+.calendar-view-switch {
+  background: #e0f2fe;
+}
+.calendar-view-switch button {
+  color: #475569;
+}
+.calendar-view-switch button[aria-selected="true"] {
+  color: #075985;
+  background: #fff;
+  box-shadow: 0 1px 4px #0f5aa514;
+}
+.calendar-tray {
+  background: #f0f9ff;
+  border-color: #dbeafe;
+}
+.calendar-tray h2,
+.calendar-tray > button {
+  color: #0f172a;
+}
+.calendar-tray > p,
+.calendar-tray > button span {
+  color: #475569;
+}
+.calendar-tray > button {
+  border-bottom-color: #dbeafe;
+}
+.calendar-tray > button:hover {
+  background: #fff;
+}
+.calendar-tray .calendar-tray-back {
+  color: #0284c7;
+}
+.calendar-task {
+  border-color: #dbeafe;
+  box-shadow: 0 1px 1px #0f5aa508;
+}
+.calendar-task strong {
+  color: #0f172a;
+}
+.calendar-task span,
+.calendar-empty {
+  color: #475569;
+}
+.calendar-canvas {
+  background: #f8fbff;
+  border-color: #dbeafe;
+}
+.week-calendar {
+  border-color: #bfdbfe;
+}
+.week-corner {
+  background: #e0f2fe;
+}
+.week-corner,
+.week-day-label {
+  border-bottom-color: #bfdbfe;
+}
+.week-day-label {
+  color: #334155;
+  background: #f0f9ff;
+  border-right-color: #dbeafe;
+}
+.week-day-label:nth-child(3),
+.week-day-label:nth-child(5),
+.week-day-label:nth-child(7) {
+  background: #fff;
+}
+.week-day-label b {
+  color: #0f172a;
+}
+.hour-label {
+  color: #475569;
+  background: #f0f9ff;
+  border-color: #dbeafe;
+}
+.hour-slot {
+  border-color: #e0efff;
+  background: #fff;
+}
+.hour-slot:nth-child(8n + 3),
+.hour-slot:nth-child(8n + 5),
+.hour-slot:nth-child(8n + 7) {
+  background: #f8fbff;
+}
+.hour-slot:hover {
+  background: #ecfeff;
+}
+.scheduled-event {
+  color: #075985;
+  background: #e0f7ff;
+  border-color: #a5e9fa;
+}
+.month-calendar > b {
+  color: #334155;
+  background: #e0f2fe;
+}
+.month-day {
+  background: #f0f9ff;
+  border-color: #dbeafe;
+}
+.month-day-muted {
+  background: #e7f0fa;
+}
+.month-day > span {
+  color: #334155;
+}
+.month-day-muted > span {
+  color: #64748b;
+}
+.year-calendar > div {
+  background: #f0f9ff;
+  border-color: #dbeafe;
+}
+.year-calendar h2 {
+  color: #0f172a;
+}
+.year-calendar p {
+  color: #475569;
+}
+.dialog-backdrop {
+  background: #0f172a66;
+}
+.task-composer {
+  box-shadow: 0 24px 60px #0f172a33;
+}
+.task-composer h2 {
+  color: #0f172a;
+}
+.task-composer label {
+  color: #334155;
+}
+.task-composer input {
+  border-color: #bfdbfe;
+  color: #0f172a;
+}
+.cancel-button {
+  color: #334155;
+}
+
+/* Default dark monochrome theme. Folder border colours remain user-controlled. */
+:root {
+  color: #f8fafc;
+  background: #09090b;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline-color: #fff;
+}
+.focusboard-shell {
+  background: #09090b;
+}
+.sidebar {
+  color: #e4e4e7;
+  background: #09090b;
+  border-right-color: #27272a;
+}
+.brand,
+.board-heading h1,
+.empty-page h1,
+.calendar-page h1 {
+  color: #fff;
+}
+.brand-mark {
+  color: #09090b;
+  background: #fff;
+}
+.create-button,
+.primary-action {
+  color: #09090b;
+  background: #fff;
+  box-shadow: none;
+}
+.nav-label {
+  color: #a1a1aa;
+}
+.folders-label button {
+  color: #fff;
+}
+.nav-item {
+  color: #d4d4d8;
+}
+.nav-item b {
+  color: #a1a1aa;
+}
+.nav-item-selected {
+  color: #fff;
+  background: #27272a;
+}
+.folder-creator input {
+  color: #fff;
+  background: #18181b;
+  border-color: #3f3f46;
+}
+.folder-creator button {
+  color: #09090b;
+  background: #fff;
+}
+.timer {
+  color: #d4d4d8;
+  background: #18181b;
+  border-color: #3f3f46;
+  box-shadow: none;
+}
+.timer-dot {
+  background: #fff;
+  box-shadow: 0 0 0 3px #3f3f46;
+}
+.timer strong {
+  color: #fff;
+}
+.timer button {
+  color: #09090b;
+  background: #fff;
+}
+.mobile-menu-button span {
+  background: #fff;
+}
+.eyebrow {
+  color: #a1a1aa;
+}
+.board-description {
+  color: #a1a1aa;
+}
+.main-task-section,
+.urgent-section,
+.calendar-section {
+  background: #18181b;
+  border-color: #27272a;
+}
+.main-task-header h2,
+.urgent-section h2,
+.calendar-section h2,
+.folder-section h2,
+.kanban-heading h1,
+.kanban-column h2 {
+  color: #fff;
+}
+.main-task-header .add-task,
+.calendar-section header button {
+  color: #fff;
+}
+.urgent-section header > span {
+  color: #09090b;
+  background: #fff;
+}
+.urgent-task,
+.task-card {
+  background: #18181b;
+  border-color: #3f3f46;
+  box-shadow: none;
+}
+.urgent-task h3,
+.task-card h3 {
+  color: #fff;
+}
+.urgent-task p,
+.task-card p,
+.overview-empty {
+  color: #a1a1aa;
+}
+.urgent-arrow {
+  color: #71717a;
+}
+.task-accent-warm,
+.task-accent-cool,
+.task-accent-neutral,
+.task-accent-focus,
+.task-accent-done {
+  background: #fff;
+}
+.calendar-day {
+  background: #18181b;
+  border-color: #3f3f46;
+}
+.calendar-day > span {
+  color: #a1a1aa;
+}
+.calendar-day > span b {
+  color: #fff;
+}
+.calendar-event-warm,
+.calendar-event-cool,
+.calendar-event-focus {
+  color: #09090b;
+  background: #fff;
+}
+.task-tag,
+.task-tag-warm,
+.task-tag-cool,
+.task-tag-neutral,
+.task-tag-focus,
+.task-tag-done {
+  color: #e4e4e7;
+  background: #27272a;
+}
+.task-edit-button {
+  padding: 4px 7px;
+  border: 1px solid #3f3f46;
+  color: #d4d4d8;
+  background: #18181b;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.task-edit-button:hover {
+  color: #09090b;
+  background: #fff;
+}
+.task-delete-button {
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  border: 1px solid #3f3f46;
+  color: #a1a1aa;
+  background: #18181b;
+  border-radius: 5px;
+  font-size: 15px;
+  line-height: 1;
+}
+.task-delete-button:hover {
+  color: #09090b;
+  background: #fff;
+}
+.folder-section {
+  border-top-color: #3f3f46;
+}
+.folder-dropzone {
+  background: #18181b;
+}
+.folder-dropzone h3 {
+  color: #fff;
+}
+.folder-dropzone header > span:last-child {
+  color: #09090b;
+  background: #fff;
+}
+.folder-menu-button {
+  color: #a1a1aa;
+}
+.folder-menu-button:hover {
+  color: #09090b;
+  background: #fff;
+}
+.folder-icon {
+  color: #fff;
+}
+.folder-dropzone > p {
+  color: #a1a1aa;
+}
+.folder-menu {
+  background: #18181b;
+  border-color: #3f3f46;
+  box-shadow: 0 12px 30px #0009;
+}
+.folder-menu > button,
+.folder-menu form button {
+  color: #f4f4f5;
+}
+.folder-menu > button:hover {
+  color: #09090b;
+  background: #fff;
+}
+.folder-menu form input {
+  color: #fff;
+  background: #09090b;
+  border-color: #52525b;
+}
+.folder-menu form button {
+  color: #09090b;
+  background: #fff;
+}
+.folder-color-control,
+.folder-up-next-control {
+  color: #d4d4d8;
+  border-color: #3f3f46;
+}
+.folder-color-control input {
+  width: 30px;
+  height: 24px;
+  padding: 2px;
+  border: 1px solid #71717a;
+  border-radius: 5px;
+  background: #09090b;
+  cursor: pointer;
+}
+.folder-color-control input:hover {
+  border-color: #fff;
+}
+.folder-up-next-control input {
+  accent-color: #fff;
+}
+.calendar-task-toggle {
+  border-color: #3f3f46;
+  background: #18181b;
+}
+.calendar-task-toggle:hover,
+.calendar-task-toggle[aria-expanded="true"] {
+  border-color: #fff;
+  background: #27272a;
+}
+.calendar-task-toggle span {
+  background: #fff;
+}
+.calendar-view-switch {
+  background: #27272a;
+}
+.calendar-view-switch button {
+  color: #a1a1aa;
+}
+.calendar-view-switch button[aria-selected="true"] {
+  color: #09090b;
+  background: #fff;
+  box-shadow: none;
+}
+.calendar-tray {
+  background: #18181b;
+  border-color: #3f3f46;
+}
+.calendar-tray h2,
+.calendar-tray > button {
+  color: #fff;
+}
+.calendar-tray > p,
+.calendar-tray > button span {
+  color: #a1a1aa;
+}
+.calendar-tray > button {
+  border-bottom-color: #3f3f46;
+}
+.calendar-tray > button:hover {
+  background: #27272a;
+}
+.calendar-tray .calendar-tray-back {
+  color: #fff;
+}
+.calendar-task {
+  background: #18181b;
+  border-color: #52525b;
+  box-shadow: none;
+}
+.calendar-task strong {
+  color: #fff;
+}
+.calendar-task span,
+.calendar-empty {
+  color: #a1a1aa;
+}
+.calendar-canvas {
+  background: #09090b;
+  border-color: #3f3f46;
+}
+.week-calendar {
+  border: 1px solid #52525b;
+  background: #09090b;
+}
+.week-corner,
+.week-day-label {
+  border-bottom: 1px solid #52525b;
+}
+.week-corner {
+  background: #18181b;
+}
+.week-day-label {
+  color: #d4d4d8;
+  background: #18181b;
+  border-right: 1px solid #52525b;
+}
+.week-day-label:nth-child(3),
+.week-day-label:nth-child(5),
+.week-day-label:nth-child(7) {
+  background: #18181b;
+}
+.week-day-label b {
+  color: #fff;
+}
+.hour-label {
+  color: #a1a1aa;
+  background: #18181b;
+  border-right: 1px solid #52525b;
+  border-bottom: 1px solid #52525b;
+}
+.hour-slot {
+  border-right: 1px solid #3f3f46;
+  border-bottom: 1px solid #3f3f46;
+  background: #09090b;
+}
+.hour-slot:nth-child(8n + 3),
+.hour-slot:nth-child(8n + 5),
+.hour-slot:nth-child(8n + 7) {
+  background: #09090b;
+}
+.hour-slot:hover {
+  background: #27272a;
+}
+.scheduled-event {
+  color: #09090b;
+  background: #fff;
+  border-color: #fff;
+}
+.month-calendar {
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid #52525b;
+  border-radius: 7px;
+}
+.month-calendar > b {
+  color: #d4d4d8;
+  background: #18181b;
+  border-right: 1px solid #52525b;
+  border-bottom: 1px solid #52525b;
+  border-radius: 0;
+}
+.month-day {
+  background: #09090b;
+  border: 0;
+  border-right: 1px solid #3f3f46;
+  border-bottom: 1px solid #3f3f46;
+  border-radius: 0;
+}
+.month-day-muted {
+  background: #050506;
+}
+.month-day > span {
+  color: #fff;
+}
+.month-day-muted > span {
+  color: #71717a;
+}
+.year-calendar > div {
+  background: #18181b;
+  border-color: #52525b;
+}
+.year-calendar h2 {
+  color: #fff;
+}
+.year-calendar p {
+  color: #a1a1aa;
+}
+.month-calendar > b:nth-child(7),
+.month-day:nth-child(7n) {
+  border-right: 0;
+}
+.month-day:nth-last-child(-n + 7) {
+  border-bottom: 0;
+}
+.dialog-backdrop {
+  background: #000b;
+}
+.task-composer {
+  background: #18181b;
+  box-shadow: 0 24px 60px #000a;
+}
+.task-composer h2 {
+  color: #fff;
+}
+.task-composer label {
+  color: #d4d4d8;
+}
+.task-composer input {
+  color: #fff;
+  background: #09090b;
+  border-color: #52525b;
+}
+.cancel-button {
+  color: #d4d4d8;
+}

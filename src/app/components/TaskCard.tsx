@@ -65,7 +65,12 @@ export function TaskCard({
     if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current);
     longPressTimer.current = null;
   };
-  const getDragPreview = (x: number, y: number, width?: number): DragPreview => {
+  const getDragPreview = (
+    x: number,
+    y: number,
+    width?: number,
+    height?: number,
+  ): DragPreview => {
     const card = cardRef.current;
     const bounds = card?.getBoundingClientRect();
     const cardStyle = card ? getComputedStyle(card) : null;
@@ -73,7 +78,7 @@ export function TaskCard({
       x,
       y,
       width: width ?? bounds?.width ?? 180,
-      height: bounds?.height ?? 104,
+      height: height ?? bounds?.height ?? 104,
       color: cardStyle?.color ?? "#ffffff",
       background: cardStyle?.backgroundColor ?? "#27272a",
       borderColor: cardStyle?.borderColor ?? "#52525b",
@@ -140,7 +145,7 @@ export function TaskCard({
     longPressTimer.current = window.setTimeout(() => {
       const card = cardRef.current;
       const bounds = card?.getBoundingClientRect();
-      const taskList = card?.closest<HTMLElement>(".folder-task-list");
+      const taskList = card?.closest<HTMLElement>(".folder-task-list, .main-task-list");
       const listBounds = taskList?.getBoundingClientRect();
       const listStyle = taskList ? getComputedStyle(taskList) : null;
       const listGap = Number.parseFloat(listStyle?.columnGap ?? "") || 0;
@@ -152,7 +157,12 @@ export function TaskCard({
       touchPosition.current = { x: touch.clientX, y: touch.clientY };
       lockDocumentScroll();
       setTouchPreview({
-        ...getDragPreview(touch.clientX, touch.clientY, previewWidth),
+        ...getDragPreview(
+          touch.clientX,
+          touch.clientY,
+          previewWidth,
+          taskList ? 104 : undefined,
+        ),
       });
       setIsTouchDragging(true);
       startAutoScroll();
@@ -162,7 +172,8 @@ export function TaskCard({
     const touch = event.touches[0];
     if (!touch) return;
     if (isTouchDraggingRef.current) {
-      event.preventDefault();
+      // React registers touch moves as passive; the non-passive document listener
+      // installed for the drag owns scroll prevention.
       touchPosition.current = { x: touch.clientX, y: touch.clientY };
       setTouchPreview((current) =>
         current ? { ...current, x: touch.clientX, y: touch.clientY } : current,
@@ -225,16 +236,39 @@ export function TaskCard({
           onOpen();
         }}
         onDragStart={(event) => {
+          if (isTouchDraggingRef.current) {
+            event.preventDefault();
+            return;
+          }
           event.stopPropagation();
           const transparentDragImage = document.createElement("canvas");
           transparentDragImage.width = 1;
           transparentDragImage.height = 1;
           event.dataTransfer.setDragImage(transparentDragImage, 0, 0);
-          const bounds = cardRef.current?.getBoundingClientRect();
+          const card = cardRef.current;
+          const bounds = card?.getBoundingClientRect();
+          const taskList = card?.closest<HTMLElement>(
+            ".folder-task-list, .main-task-list",
+          );
+          const listBounds = taskList?.getBoundingClientRect();
+          const listGap = Number.parseFloat(
+            taskList ? getComputedStyle(taskList).columnGap : "",
+          );
+          const previewWidth = listBounds
+            ? Math.min(
+                bounds?.width ?? listBounds.width,
+                Math.max(
+                  1,
+                  (listBounds.width - (Number.isFinite(listGap) ? listGap : 0)) / 2,
+                ),
+              )
+            : undefined;
           setDesktopPreview(
             getDragPreview(
               event.clientX || (bounds?.left ?? 0) + (bounds?.width ?? 0) / 2,
               event.clientY || (bounds?.top ?? 0) + (bounds?.height ?? 0) / 2,
+              previewWidth,
+              previewWidth ? 104 : undefined,
             ),
           );
           onDragStart(event);
@@ -252,9 +286,9 @@ export function TaskCard({
         }}
         onDragOver={(event) => {
           event.preventDefault();
-          event.stopPropagation();
         }}
         onDrop={(event) => {
+          if (!event.dataTransfer.types.includes("application/x-focusboard-task")) return;
           event.stopPropagation();
           onDropOnTask(event, task.id);
         }}
@@ -263,8 +297,11 @@ export function TaskCard({
         {dueText && <span className="task-due">{dueText}</span>}
         <p>{summary}</p>
         <div className="task-footer">
-          <span className="task-mode">{modeText}</span>
-          {isOverdue && <span className="task-overdue">Overdue</span>}
+          {isOverdue ? (
+            <span className="task-overdue">Overdue</span>
+          ) : (
+            <span className="task-mode">{modeText}</span>
+          )}
           <button
             className="task-complete-button"
             type="button"

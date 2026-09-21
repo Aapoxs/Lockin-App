@@ -69,11 +69,11 @@ export function SidebarFolderItem({
     if (!sidebarBounds || !folderAreaBounds || !rowBounds) return { x, y };
     const minX = sidebarBounds.left + width / 2 + 6;
     const maxX = sidebarBounds.right - width / 2 - 6;
-    const firstFolderRow = rowRef.current
+    const firstFolderGroup = rowRef.current
       ?.closest<HTMLElement>(".sidebar-folder-groups")
-      ?.querySelector<HTMLElement>("[data-sidebar-folder-id]")
+      ?.querySelector<HTMLElement>("[data-sidebar-folder-group]")
       ?.getBoundingClientRect();
-    const minY = (firstFolderRow?.top ?? folderAreaBounds.top) + height / 2;
+    const minY = (firstFolderGroup?.top ?? folderAreaBounds.top) + height / 2;
     const maxY = folderAreaBounds.bottom - height / 2;
     return {
       x: Math.min(
@@ -139,7 +139,6 @@ export function SidebarFolderItem({
     },
     [],
   );
-
   const handleTouchStart = (event: TouchEvent<HTMLElement>) => {
     const touch = event.touches[0];
     if (!touch || event.touches.length !== 1) return;
@@ -161,7 +160,7 @@ export function SidebarFolderItem({
     const touch = event.touches[0];
     if (!touch) return;
     if (isTouchReordering.current) {
-      event.preventDefault();
+      // The drag's non-passive document listener prevents scrolling.
       setTouchPreview(updatePreviewPosition(touch.clientX, touch.clientY));
       return;
     }
@@ -201,7 +200,7 @@ export function SidebarFolderItem({
     <>
       <div
         ref={rowRef}
-        className={`nav-item nav-folder-item${isReordering || desktopPreview ? " sidebar-folder-reordering" : ""}`}
+        className={`nav-item nav-folder-item${taskCount === 0 ? " sidebar-folder-empty" : ""}${isReordering || desktopPreview ? " sidebar-folder-reordering" : ""}`}
         data-sidebar-folder-id={folder.id}
         draggable={false}
         style={{ "--folder-color": folder.color } as CSSProperties}
@@ -253,7 +252,9 @@ export function SidebarFolderItem({
             if (!event.clientX && !event.clientY) return;
             setDesktopPreview(updatePreviewPosition(event.clientX, event.clientY));
           }}
-          onDragEnd={() => setDesktopPreview(null)}
+          onDragEnd={() => {
+            setDesktopPreview(null);
+          }}
         >
           ⠿
         </span>

@@ -14,6 +14,8 @@ export type Task = {
   detail: string;
   tone: "warm" | "cool" | "neutral" | "focus" | "done";
   column: Column;
+  /** Whether this task has been explicitly added to the Kanban board. */
+  isInKanban?: boolean;
   destination: Destination;
   mode: TaskMode;
   status: TaskStatus;
@@ -63,6 +65,7 @@ export type WorkspaceSnapshot = {
   calendarEntries: CalendarEntry[];
   focusSessions: FocusSession[];
   preferences: WorkspacePreferences;
+  pomodoro?: StoredPomodoro;
 };
 
 export type StoredPomodoro = {
@@ -70,4 +73,9 @@ export type StoredPomodoro = {
   remainingSeconds: number;
   endsAt: string | null;
   selectedTaskId: string | null;
+  queueTaskIds: string[];
+  breaksEnabled: boolean;
+  breakMinutes: number;
+  isBreakSession: boolean;
+  isAutomaticQueueEnabled: boolean;
 };

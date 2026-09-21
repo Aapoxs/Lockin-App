@@ -22,7 +22,6 @@ export function CalendarHeader({
   return (
     <header className="calendar-page-header">
       <div>
-        <p className="eyebrow">Plan your time</p>
         <h1 id="calendar-page-title">Calendar</h1>
       </div>
       <div className="calendar-page-actions">

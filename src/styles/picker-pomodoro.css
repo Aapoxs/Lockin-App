@@ -1,0 +1,787 @@
+/* Light custom themes need their foreground to win over the default dark palette. */
+.focusboard-shell.custom-theme
+  :is(.brand, .navigation .nav-item, .navigation .nav-item b) {
+  color: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme
+  :is(
+    .week-day-label b,
+    .calendar-day > span b,
+    .month-day > span,
+    .main-month-day > span
+  ) {
+  color: var(--theme-text) !important;
+}
+
+.folder-task-picker {
+  position: relative;
+}
+.folder-task-picker-trigger {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #52525b;
+  border-radius: 10px;
+  color: #fff;
+  background: #18181b;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+}
+.folder-task-picker-trigger > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.folder-task-picker-trigger > span:last-child {
+  font-size: 18px;
+  line-height: 0.7;
+}
+.folder-task-picker-menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  padding: 6px;
+  border: 1px solid #52525b;
+  border-radius: 10px;
+  background: #18181b;
+  box-shadow: 0 14px 30px #0007;
+}
+.folder-task-picker-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 1px 2px 7px;
+}
+.folder-task-picker-menu-header strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #fff;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.folder-task-picker-back {
+  flex: 0 0 auto;
+  padding: 5px 7px;
+  border: 1px solid #52525b;
+  border-radius: 6px;
+  color: #d4d4d8;
+  background: #27272a;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+}
+.folder-task-picker-options {
+  display: grid;
+  gap: 5px;
+}
+.folder-task-picker-empty {
+  margin: 0;
+  padding: 8px 9px;
+  color: #a1a1aa;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.folder-task-picker-task-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.folder-task-picker-task-options > :only-child,
+.folder-task-picker-task-options > :nth-child(odd):last-child {
+  grid-column: 1 / -1;
+}
+.folder-task-picker-option {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 9px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #fff;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+}
+.folder-task-picker-task-options .folder-task-picker-option {
+  min-height: 54px;
+}
+.folder-task-picker-option > span {
+  display: block;
+  overflow: hidden;
+  padding-right: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.folder-task-picker-folder-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-color: #3f3f46;
+}
+.folder-task-picker-folder-option b {
+  flex: 0 0 auto;
+  color: #a1a1aa;
+  font-size: 11px;
+}
+.folder-task-picker-option:hover,
+.folder-task-picker-option[aria-pressed="true"] {
+  color: #09090b;
+  background: #fff;
+}
+.focusboard-shell.custom-theme .folder-task-picker-trigger,
+.focusboard-shell.custom-theme .folder-task-picker-menu {
+  color: var(--theme-text) !important;
+  background: color-mix(in srgb, var(--theme-main) 88%, var(--theme-text) 12%) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 30%,
+    var(--theme-main) 70%
+  ) !important;
+}
+.focusboard-shell.custom-theme .folder-task-picker-option,
+.focusboard-shell.custom-theme .folder-task-picker-menu-header strong,
+.focusboard-shell.custom-theme .folder-task-picker-back,
+.focusboard-shell.custom-theme .folder-task-picker-folder-option b,
+.focusboard-shell.custom-theme .folder-task-picker-empty {
+  color: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme .folder-task-picker-folder-option,
+.focusboard-shell.custom-theme .folder-task-picker-back {
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 30%,
+    var(--theme-main) 70%
+  ) !important;
+  background: color-mix(in srgb, var(--theme-main) 84%, var(--theme-text) 16%) !important;
+}
+.focusboard-shell.custom-theme .folder-task-picker-option {
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 46%,
+    var(--theme-main) 54%
+  ) !important;
+  background: color-mix(in srgb, var(--theme-main) 80%, var(--theme-text) 20%) !important;
+}
+.focusboard-shell.custom-theme .folder-task-picker-option:hover,
+.focusboard-shell.custom-theme .folder-task-picker-option[aria-pressed="true"] {
+  color: var(--theme-main) !important;
+  background: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme .folder-task-picker-empty-option[aria-pressed="true"] {
+  color: var(--theme-text) !important;
+  background: color-mix(in srgb, var(--theme-main) 80%, var(--theme-text) 20%) !important;
+}
+.focusboard-shell.custom-theme
+  .folder-task-picker-option:is(:hover, [aria-pressed="true"])
+  :is(span, b),
+.focusboard-shell.custom-theme
+  .folder-task-picker-trigger:is(:hover, [aria-expanded="true"])
+  span {
+  color: var(--theme-main) !important;
+}
+.focusboard-shell.custom-theme
+  .folder-task-picker-empty-option[aria-pressed="true"]
+  span {
+  color: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme.light-theme
+  .folder-task-picker-trigger:is(:hover, [aria-expanded="true"]),
+.focusboard-shell.custom-theme.light-theme
+  .folder-task-picker-option:is(:hover, [aria-pressed="true"]),
+.focusboard-shell.custom-theme.light-theme .folder-task-picker-back:hover {
+  color: #fff !important;
+  background: color-mix(in srgb, var(--theme-text) 88%, #000 12%) !important;
+  border-color: color-mix(in srgb, var(--theme-text) 88%, #000 12%) !important;
+}
+.focusboard-shell.custom-theme.light-theme
+  .folder-task-picker-trigger-empty:is(:hover, [aria-expanded="true"]) {
+  color: var(--theme-text) !important;
+  background: color-mix(in srgb, var(--theme-main) 88%, var(--theme-text) 12%) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 30%,
+    var(--theme-main) 70%
+  ) !important;
+}
+.focusboard-shell.custom-theme.light-theme
+  .folder-task-picker-trigger:is(:hover, [aria-expanded="true"])
+  span,
+.focusboard-shell.custom-theme.light-theme
+  .folder-task-picker-option:is(:hover, [aria-pressed="true"])
+  :is(span, b) {
+  color: #fff !important;
+}
+.focusboard-shell.custom-theme.light-theme
+  .folder-task-picker-trigger-empty:is(:hover, [aria-expanded="true"])
+  span {
+  color: var(--theme-text) !important;
+}
+.folder-task-picker-trigger:is(:hover, [aria-expanded="true"]) {
+  color: #fff;
+  background: #27272a;
+  border-color: #71717a;
+}
+.focusboard-shell.custom-theme
+  .folder-task-picker-trigger:is(:hover, [aria-expanded="true"]) {
+  color: var(--theme-text) !important;
+  background: color-mix(in srgb, var(--theme-main) 80%, var(--theme-text) 20%) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 42%,
+    var(--theme-main) 58%
+  ) !important;
+}
+.focusboard-shell.custom-theme
+  .folder-task-picker-trigger:is(:hover, [aria-expanded="true"])
+  span {
+  color: var(--theme-text) !important;
+}
+.kanban-column-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.kanban-task-picker .folder-task-picker-trigger {
+  width: 170px;
+  min-width: 0;
+}
+.kanban-task-picker .folder-task-picker-menu {
+  min-width: min(280px, calc(100vw - 52px));
+}
+
+.pomodoro-linked-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.pomodoro-task-panel {
+  position: relative;
+  z-index: 1;
+}
+.pomodoro-task-panel:has(.folder-task-picker-menu) {
+  z-index: 30;
+}
+.pomodoro-task-picker .folder-task-picker-menu {
+  z-index: 31;
+}
+.pomodoro-linked-heading h2 {
+  min-width: 0;
+}
+.pomodoro-clear-linked-task,
+.pomodoro-queue-actions button {
+  padding: 6px 8px;
+  border: 1px solid #52525b;
+  border-radius: 7px;
+  color: #d4d4d8;
+  background: #27272a;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+}
+.pomodoro-clear-linked-task:hover,
+.pomodoro-queue-actions button:hover:not(:disabled) {
+  color: #09090b;
+  background: #fff;
+  border-color: #fff;
+}
+.pomodoro-queue-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.pomodoro-options {
+  position: relative;
+}
+.pomodoro-clock {
+  position: relative;
+  z-index: 1;
+}
+.pomodoro-clock:has(.pomodoro-options-menu) {
+  z-index: 30;
+}
+.pomodoro-options-trigger {
+  display: grid;
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 9px;
+  border: 1px solid #52525b;
+  border-radius: 7px;
+  color: #d4d4d8;
+  background: #27272a;
+  place-items: center;
+  cursor: pointer;
+}
+.pomodoro-options-trigger svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+}
+.pomodoro-options-trigger:hover,
+.pomodoro-options-trigger[aria-expanded="true"] {
+  color: #09090b;
+  background: #fff;
+  border-color: #fff;
+}
+.pomodoro-options-menu {
+  position: absolute;
+  z-index: 40;
+  right: 0;
+  bottom: calc(100% + 8px);
+  display: grid;
+  min-width: 270px;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #52525b;
+  border-radius: 9px;
+  color: #d4d4d8;
+  background: #18181b;
+  box-shadow: 0 14px 30px #0008;
+  font-size: 12px;
+  text-align: left;
+}
+.pomodoro-option-length,
+.pomodoro-option-break-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 700;
+}
+.pomodoro-option-length input {
+  width: 48px;
+  margin-left: auto;
+  padding: 5px 4px;
+  border: 1px solid #52525b;
+  border-radius: 5px;
+  color: #fff;
+  background: #09090b;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+.pomodoro-option-length input:disabled {
+  opacity: 0.55;
+}
+.pomodoro-option-break-toggle input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+}
+.pomodoro-queue-section {
+  margin-top: 18px;
+  padding: 18px;
+  background: #18181b;
+  border: 1px solid #3f3f46;
+  border-radius: 10px;
+}
+.pomodoro-queue-section > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.pomodoro-queue-section h2 {
+  margin: 3px 0 0;
+  color: #fff;
+  font-size: 19px;
+  letter-spacing: -0.02em;
+}
+.pomodoro-queue-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.pomodoro-queue-clear-dropzone {
+  display: grid;
+  min-height: 29px;
+  padding: 5px 8px;
+  border: 1px dashed #71717a;
+  border-radius: 7px;
+  color: #a1a1aa;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+.pomodoro-queue-clear-dropzone:hover {
+  color: #fff;
+  border-color: #fff;
+}
+.pomodoro-queue-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+.pomodoro-queue-task:only-child {
+  grid-column: 1 / -1;
+}
+@media (max-width: 960px) {
+  .pomodoro-queue-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.pomodoro-queue-task {
+  min-width: 0;
+  min-height: 70px;
+  padding: 10px 11px;
+  border: 1px solid #52525b;
+  border-radius: 8px;
+  color: #fff;
+  background: #09090b;
+  font: inherit;
+  text-align: left;
+  touch-action: pan-y;
+  user-select: none;
+  cursor: grab;
+}
+.pomodoro-queue-task:active {
+  cursor: grabbing;
+}
+.pomodoro-queue-task-dragging {
+  opacity: 0.55;
+}
+.pomodoro-queue-task strong,
+.pomodoro-queue-task span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pomodoro-queue-task strong {
+  font-size: 13px;
+}
+.pomodoro-queue-task span {
+  margin-top: 4px;
+  color: #a1a1aa;
+  font-size: 11px;
+}
+.pomodoro-queue-task:hover {
+  border-color: #fff;
+}
+.pomodoro-queue-drag-preview {
+  position: fixed;
+  z-index: 110;
+  top: var(--queue-drag-y);
+  left: var(--queue-drag-x);
+  min-height: 70px;
+  padding: 10px 11px;
+  border: 1px solid;
+  border-radius: 8px;
+  box-shadow: 0 14px 30px #0008;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+.pomodoro-queue-drag-preview strong,
+.pomodoro-queue-drag-preview span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pomodoro-queue-drag-preview span {
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.78;
+}
+.pomodoro-queue-empty {
+  margin: 13px 0 0;
+  color: #a1a1aa;
+  font-size: 13px;
+}
+.focusboard-shell.custom-theme
+  :is(
+    .pomodoro-queue-section,
+    .pomodoro-queue-task,
+    .pomodoro-options-menu,
+    .pomodoro-option-length input
+  ) {
+  color: var(--theme-text) !important;
+  background: color-mix(in srgb, var(--theme-main) 88%, var(--theme-text) 12%) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 28%,
+    var(--theme-main) 72%
+  ) !important;
+}
+.focusboard-shell.custom-theme
+  :is(.pomodoro-clear-linked-task, .pomodoro-queue-actions button) {
+  color: var(--theme-main) !important;
+  background: var(--theme-text) !important;
+  border-color: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme .pomodoro-queue-clear-dropzone {
+  color: var(--theme-text) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 48%,
+    var(--theme-main) 52%
+  ) !important;
+}
+.focusboard-shell.custom-theme .pomodoro-queue-drag-preview {
+  color: var(--theme-text) !important;
+  background: color-mix(in srgb, var(--theme-main) 82%, var(--theme-text) 18%) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 38%,
+    var(--theme-main) 62%
+  ) !important;
+}
+.focusboard-shell.custom-theme .pomodoro-queue-task :is(strong, span),
+.focusboard-shell.custom-theme .pomodoro-queue-empty {
+  color: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme
+  :is(.pomodoro-clear-linked-task, .pomodoro-queue-actions button):hover:not(:disabled) {
+  color: var(--theme-main) !important;
+  background: var(--theme-text) !important;
+  border-color: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme.light-theme
+  :is(.pomodoro-clear-linked-task, .pomodoro-queue-actions button):not(:disabled) {
+  color: #fff !important;
+  background: color-mix(in srgb, var(--theme-text) 88%, #000 12%) !important;
+  border-color: color-mix(in srgb, var(--theme-text) 88%, #000 12%) !important;
+}
+.focusboard-shell.custom-theme :is(.pomodoro-options-trigger, .pomodoro-options-menu) {
+  color: var(--theme-text) !important;
+  background: color-mix(in srgb, var(--theme-main) 84%, var(--theme-text) 16%) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 36%,
+    var(--theme-main) 64%
+  ) !important;
+}
+.focusboard-shell.custom-theme .pomodoro-options-trigger svg {
+  stroke: currentColor !important;
+}
+.focusboard-shell.custom-theme .pomodoro-options-menu label {
+  color: var(--theme-text) !important;
+}
+.focusboard-shell.custom-theme.light-theme
+  :is(.pomodoro-options-trigger, .pomodoro-options-menu) {
+  color: #fff !important;
+  background: color-mix(in srgb, var(--theme-text) 88%, #000 12%) !important;
+  border-color: color-mix(in srgb, var(--theme-text) 88%, #000 12%) !important;
+}
+.focusboard-shell.custom-theme.light-theme .pomodoro-options-menu label {
+  color: #fff !important;
+}
+.focusboard-shell.custom-theme.light-theme
+  :is(
+    .pomodoro-clock .primary-action,
+    .pomodoro-current-task .task-complete-button,
+    .pomodoro-clear-linked-task,
+    .pomodoro-queue-actions button:not(:disabled)
+  ) {
+  color: #fff !important;
+  background: color-mix(in srgb, var(--theme-text) 88%, #000 12%) !important;
+  border-color: color-mix(in srgb, var(--theme-text) 88%, #000 12%) !important;
+}
+
+.pomodoro-current-task {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  margin-top: 16px;
+  padding: 17px;
+  border: 1px solid #52525b;
+  border-radius: 9px;
+  text-align: center;
+}
+.pomodoro-current-task h3,
+.pomodoro-current-task p {
+  margin: 0;
+}
+.pomodoro-current-task h3 {
+  color: #fff;
+  font-size: 16px;
+}
+.pomodoro-current-task p {
+  color: #a1a1aa;
+  font-size: 13px;
+}
+.pomodoro-current-task .task-complete-button {
+  margin-top: 4px;
+}
+.focusboard-shell.custom-theme .pomodoro-current-task {
+  background: color-mix(in srgb, var(--theme-main) 88%, var(--theme-text) 12%) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 28%,
+    var(--theme-main) 72%
+  ) !important;
+}
+.focusboard-shell.custom-theme .pomodoro-current-task :is(h3, p) {
+  color: var(--theme-text) !important;
+}
+
+.pomodoro-controls > :is(.primary-action, .pomodoro-reset) {
+  display: grid;
+  flex: 0 1 128px;
+  width: min(128px, calc(50% - 29px)) !important;
+  min-height: 42px;
+  padding: 9px 10px;
+  place-items: center;
+  justify-content: center !important;
+  gap: 0;
+  text-align: center;
+}
+.pomodoro-controls :is(.primary-action, .pomodoro-reset, .pomodoro-options-trigger) {
+  border: 1px solid #52525b;
+  color: #d4d4d8;
+  background: #27272a;
+}
+.pomodoro-controls
+  :is(.primary-action, .pomodoro-reset, .pomodoro-options-trigger):is(
+    :hover,
+    [aria-expanded="true"]
+  ) {
+  color: #09090b;
+  background: #fff;
+  border-color: #fff;
+}
+.focusboard-shell.custom-theme
+  .pomodoro-controls
+  :is(.primary-action, .pomodoro-reset, .pomodoro-options-trigger) {
+  color: var(--theme-text) !important;
+  background: color-mix(in srgb, var(--theme-main) 84%, var(--theme-text) 16%) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--theme-text) 36%,
+    var(--theme-main) 64%
+  ) !important;
+}
+.focusboard-shell.custom-theme
+  .pomodoro-controls
+  :is(.primary-action, .pomodoro-reset, .pomodoro-options-trigger):is(
+    :hover,
+    [aria-expanded="true"]
+  ) {
+  color: var(--theme-main) !important;
+  background: var(--theme-text) !important;
+  border-color: var(--theme-text) !important;
+}
+
+/* Keep each page title optically centred in the fixed-height utility bar. */
+.board-heading > div,
+.calendar-page-header > div:first-child,
+.pomodoro-heading > div,
+.kanban-heading > div,
+.completed-page > header > div {
+  display: grid;
+  grid-template-rows: 37px auto;
+}
+.board-heading h1,
+.calendar-page h1,
+.pomodoro-heading h1,
+.kanban-heading h1,
+.completed-page h1 {
+  align-self: center;
+  line-height: 1;
+}
+
+/* Crossing the responsive breakpoint must not animate a sidebar that is closed. */
+@media (max-width: 1100px) {
+  .sidebar {
+    transition: none;
+  }
+}
+
+/* Kanban uses the same compact, two-up task treatment as folder task lists. */
+.kanban-column > div {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.kanban-column > div > .task-card:only-child,
+.kanban-column > div > .task-card:nth-child(odd):last-child {
+  grid-column: 1 / -1;
+}
+.kanban-column > div > .task-card {
+  min-height: 102px;
+  box-sizing: border-box;
+  padding: 8px 9px 32px;
+}
+.kanban-column > div > .task-card h3 {
+  margin: 0 0 1px;
+  padding-right: 48px;
+  font-size: 13px;
+  white-space: normal;
+}
+.kanban-column > div > .task-card p {
+  margin: 2px 0 0;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.kanban-column > div > .task-card .task-footer {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  left: auto;
+  width: max-content;
+  margin: 0;
+  gap: 4px;
+}
+
+/* The board is deliberately either a full three-stage board or a single stack. */
+@media (max-width: 1060px) {
+  .kanban-board {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 620px) {
+  .pomodoro-queue-section {
+    padding: 14px;
+  }
+  .pomodoro-queue-section > header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .pomodoro-queue-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+  .pomodoro-queue-actions button {
+    flex: 1;
+  }
+  .pomodoro-queue-clear-dropzone {
+    flex: 1;
+  }
+}
+
+/* Pomodoro touch controls stay comfortably tappable without widening the layout. */
+@media (max-width: 620px) {
+  .pomodoro-page :is(.primary-action, .pomodoro-reset, .pomodoro-options-trigger) {
+    min-height: 44px;
+  }
+  .pomodoro-page .pomodoro-options-trigger {
+    width: 44px;
+    min-width: 44px;
+  }
+  .pomodoro-page :is(.pomodoro-clear-linked-task, .pomodoro-queue-actions button) {
+    min-height: 44px;
+    padding-inline: 10px;
+  }
+  .pomodoro-page .pomodoro-queue-clear-dropzone {
+    min-height: 44px;
+  }
+  .pomodoro-page .folder-task-picker-trigger,
+  .pomodoro-page .folder-task-picker-option,
+  .pomodoro-page .folder-task-picker-back,
+  .pomodoro-page .pomodoro-current-task .task-complete-button {
+    min-height: 44px;
+  }
+  .pomodoro-page .folder-task-picker-task-options .folder-task-picker-option {
+    min-height: 58px;
+  }
+}
