@@ -1,6 +1,6 @@
 # Lockin Board
 
-Lockin Board is a private, local-first **Progressive Web App** for organizing tasks in folders and Kanban boards, then completing them with a configurable Pomodoro timer.
+Lockin Board is a private, local-first **Progressive Web App** (PWA) for organizing tasks in folders and Kanban boards, then completing them with a configurable Pomodoro timer.
 
 For testing and private usage: [https://lockinboard.netlify.app/](https://lockinboard.netlify.app/)
 
@@ -13,14 +13,14 @@ npm install
 npm run dev
 ```
 
-Open the local URL Vite prints (normally `http://127.0.0.1:1420`). For a production build, run `npm run build` and serve the `dist` folder from a local or HTTPS web server. Install it from Edge or Chrome's **Install app** option.
+Open the local URL (usually `http://127.0.0.1:1420`). For a production build, run `npm run build` and serve the `dist` folder from a local or HTTPS web server. Install it from Edge or Chrome's **Install app** option.
 
 Lockin Board stores its workspace in the browser's IndexedDB database for its installed site. It makes no network requests at runtime. Use **Export backup** regularly: it downloads a portable, versioned JSON snapshot containing tasks, folders, calendar entries, and Pomodoro history. **Restore backup** validates the complete structure before replacing the current local workspace.
 
 ## Privacy, backups, and publishing
 
-- Your workspace remains in the browser profile on the device where you use the app. Lockin Board has no accounts, telemetry, server database, or cross-device sync.
-- Exported backups can contain private task titles, notes, schedules, and Pomodoro history. Keep them somewhere you trust and do not commit them to a public repository. Files named `lockin-board-backup-*.json` are ignored by Git by default.
+- Your workspace remains in the browser profile on the device where you use the app. Lockin Board has: **no accounts, telemetry, server database, or default cross-device sync.**
+- Keep exported backups somewhere you trust and do not commit them to a public repository. Files named `lockin-board-backup-*.json` are ignored by Git by default.
 - Use a browser or Windows profile that only you trust if your tasks are sensitive. This app is not an encrypted password manager or secure document vault.
 - A public deployment gives each visitor a separate local workspace; visitors cannot see one another's tasks.
 - Only restore backup files you trust. The app accepts versioned Lockin Board JSON backups up to 5 MB and verifies their expected data structure before importing them.
@@ -36,10 +36,10 @@ Build an offline-first PWA with **React + TypeScript + IndexedDB**.
 
 See [the product specification](docs/01-product-spec.md) and [architecture](docs/02-technical-architecture.md).
 
-## Non-goals for v1
+## Possible future goals.
 
 - Cloud sync, accounts, collaboration, or telemetry.
 - Automatic multi-device sync.
 - Third-party task integrations.
 
-Keeping v1 local-only is deliberate: it reduces attack surface, CPU/RAM use, and complexity.
+Keeping the project local-only is deliberate: it reduces attack surface, CPU/RAM use, and complexity.
