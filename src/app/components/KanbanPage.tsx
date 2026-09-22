@@ -49,7 +49,7 @@ export function KanbanPage({
                     <FolderTaskPicker
                       activeTasks={availableTasks}
                       folders={folders}
-                      label="+ Add task"
+                      label="Task"
                       className="kanban-task-picker"
                       onSelectTask={(taskId) => {
                         if (taskId) onAddTaskToKanban(taskId);
@@ -57,7 +57,6 @@ export function KanbanPage({
                     />
                   )}
                 </div>
-                <span>{columnTasks.length}</span>
               </header>
               <div>{columnTasks.map(renderTask)}</div>
             </section>

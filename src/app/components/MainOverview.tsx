@@ -35,8 +35,7 @@ export function MainOverview({
       <section className="urgent-section" aria-labelledby="urgent-title">
         <header>
           <div>
-            <p className="eyebrow">Up next</p>
-            <h2 id="urgent-title">On your calendar</h2>
+            <h2 id="urgent-title">Up Next</h2>
           </div>
           <div className="urgent-heading-actions">
             <button
@@ -88,7 +87,6 @@ export function MainOverview({
       >
         <header>
           <div>
-            <p className="eyebrow">This month</p>
             <h2 id="calendar-title">{mainCalendarMonthLabel}</h2>
           </div>
         </header>

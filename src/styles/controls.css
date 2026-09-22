@@ -1,0 +1,508 @@
+/* Shared control hierarchy. Derived colors keep every preset and custom pair coherent. */
+.focusboard-shell.custom-theme {
+  --control-surface: color-mix(in srgb, var(--theme-main) 88%, var(--theme-text) 12%);
+  --control-surface-hover: color-mix(
+    in srgb,
+    var(--theme-main) 76%,
+    var(--theme-text) 24%
+  );
+  --control-border: color-mix(in srgb, var(--theme-text) 30%, var(--theme-main) 70%);
+  --control-text: var(--theme-text);
+  --control-primary-surface: var(--theme-text);
+  --control-primary-text: var(--theme-main);
+}
+
+.focusboard-shell.custom-theme :is(button, a, input, select, textarea):focus-visible {
+  outline-color: color-mix(in srgb, var(--theme-text) 78%, var(--theme-main) 22%);
+}
+
+/* Primary controls are reserved for creating, saving, starting, and returning to today. */
+.focusboard-shell.custom-theme
+  :is(
+    .primary-action,
+    .folder-add-button,
+    .main-task-header .add-task,
+    .calendar-nav-today
+  ) {
+  min-height: 38px;
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--control-primary-text) 42%,
+      var(--control-primary-surface) 58%
+    ) !important;
+  border-radius: 7px;
+  color: var(--control-primary-text) !important;
+  background: var(--control-primary-surface) !important;
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--control-primary-text) 52%, transparent) !important;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1;
+  transition:
+    color 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.focusboard-shell.custom-theme
+  :is(
+    .primary-action,
+    .folder-add-button,
+    .main-task-header .add-task,
+    .calendar-nav-today
+  ):hover {
+  border-color: var(--control-border) !important;
+  color: var(--control-text) !important;
+  background: var(--control-surface-hover) !important;
+}
+
+/* Secondary actions share one quiet surface across layouts and themes. */
+.focusboard-shell.custom-theme
+  :is(
+    .cancel-button,
+    .pomodoro-reset,
+    .calendar-clear-all,
+    .folder-group-visibility-button,
+    .urgent-repeat-filter,
+    .theme-preset-button,
+    .data-panel > div > button,
+    .task-edit-button,
+    .task-delete-button,
+    .task-complete-button,
+    .pomodoro-queue-action,
+    .scheduled-event footer button
+  ) {
+  border: 1px solid var(--control-border) !important;
+  border-radius: 7px;
+  color: var(--control-text) !important;
+  background: var(--control-surface) !important;
+  box-shadow: none;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  transition:
+    color 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.focusboard-shell.custom-theme
+  :is(
+    .cancel-button,
+    .pomodoro-reset,
+    .calendar-clear-all,
+    .folder-group-visibility-button,
+    .urgent-repeat-filter,
+    .theme-preset-button,
+    .data-panel > div > button,
+    .task-edit-button,
+    .task-delete-button,
+    .task-complete-button,
+    .pomodoro-queue-action,
+    .scheduled-event footer button
+  ):hover {
+  border-color: var(--control-primary-surface) !important;
+  color: var(--control-primary-text) !important;
+  background: var(--control-primary-surface) !important;
+}
+
+.focusboard-shell.custom-theme .pomodoro-queue-action {
+  min-height: 38px;
+  padding: 8px 10px;
+}
+
+.focusboard-shell.custom-theme
+  :is(.theme-preset-button, .urgent-repeat-filter)[aria-pressed="true"],
+.focusboard-shell.custom-theme .calendar-view-switch button[aria-selected="true"] {
+  border-color: var(--control-primary-surface) !important;
+  color: var(--control-primary-text) !important;
+  background: var(--control-primary-surface) !important;
+  box-shadow: none;
+}
+
+/* Card actions stay compact without becoming a separate visual language. */
+.focusboard-shell.custom-theme
+  :is(
+    .task-complete-button,
+    .task-edit-button,
+    .task-delete-button,
+    .scheduled-event footer button
+  ) {
+  display: inline-grid;
+  min-width: 25px;
+  min-height: 25px;
+  place-items: center;
+  padding: 4px 7px;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.focusboard-shell.custom-theme .task-delete-button,
+.focusboard-shell.custom-theme .scheduled-event footer button {
+  display: grid !important;
+  inline-size: 25px;
+  block-size: 25px;
+  place-items: center !important;
+  padding: 0;
+  line-height: 0 !important;
+}
+
+.focusboard-shell.custom-theme .task-delete-button svg {
+  display: block;
+  margin: 0;
+  /* The 1.8px strokes look right-heavy at this compact size; keep the glyph optically centered. */
+  transform: translateX(-1px);
+}
+
+/* Complete is a compact task action, not an exception to the neutral controls. */
+.focusboard-shell.custom-theme .task-complete-button {
+  border-color: var(--control-border) !important;
+  border-radius: 7px;
+  color: var(--control-text) !important;
+  background: var(--control-surface) !important;
+  box-shadow: none;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.focusboard-shell.custom-theme .task-complete-button:hover {
+  border-color: var(--control-primary-surface) !important;
+  color: var(--control-primary-text) !important;
+  background: var(--control-primary-surface) !important;
+}
+
+/* Status badges stay lightweight so deadline state does not become a button-like control. */
+.focusboard-shell.custom-theme .task-overdue {
+  border: 0 !important;
+  color: var(--theme-text) !important;
+  background: transparent !important;
+}
+
+.focusboard-shell.custom-theme .folder-task-list .task-overdue {
+  border: 0 !important;
+  color: var(--theme-text) !important;
+  background: transparent !important;
+}
+
+/* Linked-task removal is an ordinary secondary action. */
+.focusboard-shell.custom-theme .pomodoro-clear-linked-task {
+  border: 1px solid var(--control-border) !important;
+  border-radius: 7px;
+  color: var(--control-text) !important;
+  background: var(--control-surface) !important;
+  box-shadow: none;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.focusboard-shell.custom-theme .pomodoro-clear-linked-task:hover {
+  border-color: var(--control-primary-surface) !important;
+  color: var(--control-primary-text) !important;
+  background: var(--control-primary-surface) !important;
+}
+
+/* Folder-menu labels and their controls follow the same hover language as menu buttons. */
+.focusboard-shell.custom-theme
+  .folder-menu
+  :is(.folder-color-control, .folder-up-next-control) {
+  border: 0 !important;
+  color: var(--control-text) !important;
+  background: transparent !important;
+}
+
+.focusboard-shell.custom-theme
+  .folder-menu
+  :is(.folder-color-control, .folder-up-next-control)
+  > span {
+  color: inherit !important;
+}
+
+.focusboard-shell.custom-theme
+  .folder-menu
+  :is(.folder-color-control, .folder-up-next-control):hover {
+  color: var(--control-primary-text) !important;
+  background: var(--control-primary-surface) !important;
+}
+
+.focusboard-shell.custom-theme
+  .folder-menu
+  .folder-color-control
+  input::-webkit-color-swatch,
+.focusboard-shell.custom-theme
+  .folder-menu
+  .folder-color-control
+  input::-moz-color-swatch {
+  border-color: var(--control-border);
+}
+
+.focusboard-shell.custom-theme
+  .folder-menu
+  .folder-color-control:hover
+  input::-webkit-color-swatch,
+.focusboard-shell.custom-theme
+  .folder-menu
+  .folder-color-control:hover
+  input::-moz-color-swatch {
+  border-color: var(--control-primary-text);
+}
+
+/* Creation dialogs use one neutral action treatment; intent is conveyed by the label. */
+.focusboard-shell.custom-theme .task-composer :is(.primary-action, .cancel-button) {
+  border-color: var(--control-border) !important;
+  color: var(--control-text) !important;
+  background: var(--control-surface) !important;
+  box-shadow: none !important;
+}
+
+.focusboard-shell.custom-theme .task-composer :is(.primary-action, .cancel-button):hover {
+  border-color: var(--control-primary-surface) !important;
+  color: var(--control-primary-text) !important;
+  background: var(--control-primary-surface) !important;
+}
+
+.focusboard-shell.custom-theme .task-composer :is(input, select, textarea):focus-visible {
+  outline: 0;
+  border-color: var(--theme-text) !important;
+}
+
+/* Focus controls share a neutral treatment and a clear, equal geometry. */
+.focusboard-shell.custom-theme .pomodoro-controls :is(.primary-action, .pomodoro-reset) {
+  display: inline-grid;
+  flex: 0 0 128px;
+  width: 128px !important;
+  min-height: 42px;
+  place-items: center;
+  padding: 9px 10px;
+}
+
+.focusboard-shell.custom-theme
+  .pomodoro-controls
+  :is(.primary-action, .pomodoro-reset, .pomodoro-options-trigger) {
+  border: 1px solid var(--control-border) !important;
+  border-radius: 7px;
+  color: var(--control-text) !important;
+  background: var(--control-surface) !important;
+  box-shadow: none !important;
+  transition:
+    color 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.focusboard-shell.custom-theme .pomodoro-options-trigger {
+  display: inline-grid;
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  place-items: center;
+  padding: 9px;
+}
+
+.focusboard-shell.custom-theme
+  .pomodoro-controls
+  :is(.primary-action, .pomodoro-reset, .pomodoro-options-trigger):is(
+    :hover,
+    [aria-expanded="true"]
+  ) {
+  border-color: var(--control-primary-surface) !important;
+  color: var(--control-primary-text) !important;
+  background: var(--control-primary-surface) !important;
+}
+
+/* The utility timer is a compact version of the primary action, not a borderless exception. */
+.focusboard-shell.custom-theme .timer button {
+  width: 26px;
+  height: 26px;
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--control-primary-text) 42%,
+      var(--control-primary-surface) 58%
+    ) !important;
+  border-radius: 6px;
+  color: var(--control-primary-text) !important;
+  background: var(--control-primary-surface) !important;
+  font-size: 10px;
+}
+
+.focusboard-shell.custom-theme .timer button:hover {
+  border-color: var(--control-border) !important;
+  color: var(--control-text) !important;
+  background: var(--control-surface-hover) !important;
+}
+
+/* Page links stay prominent without turning the sidebar into a stack of cards. */
+.focusboard-shell.custom-theme .navigation > .nav-item:not(.nav-folder-item) {
+  min-height: 42px;
+  margin: 0;
+  padding-inline: 12px;
+  border: 0 !important;
+  border-bottom: 1px solid var(--control-border) !important;
+  border-radius: 0;
+  color: var(--control-text) !important;
+  background: transparent !important;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.focusboard-shell.custom-theme
+  .navigation
+  > .nav-item:not(.nav-folder-item).nav-item-selected {
+  border-color: var(--control-primary-surface) !important;
+  color: var(--control-text) !important;
+  background: transparent !important;
+}
+
+.focusboard-shell.custom-theme .navigation > .nav-item:not(.nav-folder-item) b {
+  color: currentColor !important;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+/* The folder toolbar uses one equal-sized action treatment, regardless of function. */
+.focusboard-shell.custom-theme
+  .folder-section-actions
+  :is(.folder-group-visibility-button, .folder-add-button) {
+  position: relative;
+  inline-size: 108px;
+  min-height: 38px;
+  border: 1px solid var(--control-border) !important;
+  color: var(--control-text) !important;
+  background: var(--control-surface) !important;
+  box-shadow: none !important;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.focusboard-shell.custom-theme
+  .folder-section-actions
+  :is(.folder-group-visibility-button, .folder-add-button):hover {
+  border-color: var(--control-primary-surface) !important;
+  color: var(--control-primary-text) !important;
+  background: var(--control-primary-surface) !important;
+}
+
+.focusboard-shell.custom-theme .folder-section-actions .folder-add-button {
+  justify-content: center;
+}
+
+.focusboard-shell.custom-theme .folder-section-actions .folder-add-button > span {
+  color: inherit !important;
+}
+
+.focusboard-shell.custom-theme
+  .folder-section-actions
+  .folder-add-button
+  .action-plus-icon {
+  position: absolute;
+  inset-inline-start: 17px;
+}
+
+.focusboard-shell.custom-theme .kanban-task-picker {
+  z-index: 2;
+  width: 84px;
+}
+
+.focusboard-shell.custom-theme .kanban-task-picker .folder-task-picker-trigger {
+  position: relative;
+  width: 100% !important;
+  justify-content: center;
+  min-height: 30px;
+  padding-block: 5px;
+  padding-inline: 8px;
+  border: 1px solid var(--control-border) !important;
+  border-radius: 7px;
+  color: var(--control-text) !important;
+  background: var(--control-surface) !important;
+  box-shadow: none !important;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.focusboard-shell.custom-theme .kanban-task-picker .folder-task-picker-trigger::before {
+  position: absolute;
+  inset-inline-start: 14px;
+  content: "+";
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.focusboard-shell.custom-theme .kanban-task-picker .folder-task-picker-trigger > span {
+  color: inherit !important;
+}
+
+.focusboard-shell.custom-theme
+  .kanban-task-picker
+  .folder-task-picker-trigger:is(:hover, [aria-expanded="true"]) {
+  border-color: var(--control-primary-surface) !important;
+  color: var(--control-primary-text) !important;
+  background: var(--control-primary-surface) !important;
+}
+
+.focusboard-shell.custom-theme .kanban-task-picker .folder-task-picker-menu {
+  top: calc(100% + 6px);
+  right: 0;
+  left: auto;
+  min-width: min(280px, calc(100vw - 32px));
+}
+
+.focusboard-shell.custom-theme :is(button, input, select, textarea):disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
+@media (max-width: 520px) {
+  .focusboard-shell.custom-theme .urgent-repeat-filter {
+    min-height: 34px;
+    max-width: 112px;
+    padding-inline: 7px;
+  }
+}
+
+@media (max-width: 620px) {
+  .focusboard-shell.custom-theme
+    .folder-section-actions
+    :is(.folder-group-visibility-button, .folder-add-button) {
+    inline-size: auto;
+    width: 100%;
+  }
+
+  .focusboard-shell.custom-theme
+    .pomodoro-controls
+    :is(.primary-action, .pomodoro-reset) {
+    min-height: 44px;
+  }
+
+  .focusboard-shell.custom-theme .pomodoro-options-trigger {
+    width: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* Mobile navigation is modal: page menus must never float through its surface. */
+@media (max-width: 1100px) {
+  .focusboard-shell .sidebar {
+    z-index: 200;
+  }
+
+  .focusboard-shell .mobile-nav-scrim {
+    z-index: 190;
+  }
+
+  .focusboard-shell:has(.sidebar.sidebar-open)
+    .workspace
+    :is(
+      .folder-task-picker-menu,
+      .pomodoro-options-menu,
+      .calendar-event-settings-menu,
+      .folder-menu
+    ) {
+    visibility: hidden;
+  }
+}

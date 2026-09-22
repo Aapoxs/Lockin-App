@@ -55,8 +55,8 @@
 
 /* A small, curated palette keeps every theme pair within a tested contrast range. */
 .theme-controls {
-  margin: 20px 6px 0;
-  padding: 14px 6px 0;
+  margin: 20px 0 0;
+  padding: 14px 0 0;
   border-top: 1px solid #3f3f46;
 }
 .theme-controls .nav-label {
@@ -198,8 +198,8 @@
 @media (max-width: 620px) {
   html,
   body {
-    min-width: 0;
-    overflow-x: hidden;
+    min-width: 360px;
+    overflow-x: auto;
     -ms-overflow-style: none;
     scrollbar-width: none;
   }

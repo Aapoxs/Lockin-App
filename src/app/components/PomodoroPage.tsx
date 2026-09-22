@@ -170,10 +170,8 @@ function PomodoroQueueTask({ task, onReorder, onRemove }: PomodoroQueueTaskProps
     const touch = event.changedTouches[0];
     if (touch) {
       const target = document.elementFromPoint(touch.clientX, touch.clientY);
-      const clearArea = target?.closest<HTMLElement>("[data-pomodoro-queue-clear]");
       const queueTask = target?.closest<HTMLElement>("[data-pomodoro-queue-task-id]");
-      if (clearArea) onRemove(task.id);
-      else if (queueTask?.dataset.pomodoroQueueTaskId)
+      if (queueTask?.dataset.pomodoroQueueTaskId)
         onReorder(task.id, queueTask.dataset.pomodoroQueueTaskId);
     }
     finishTouchDrag();
@@ -217,8 +215,36 @@ function PomodoroQueueTask({ task, onReorder, onRemove }: PomodoroQueueTaskProps
           onReorder(movingTaskId, task.id);
         }}
       >
-        <strong>{task.title}</strong>
-        {task.detail !== "No note" && <span>{task.detail}</span>}
+        <div className="pomodoro-queue-task-content">
+          <strong>{task.title}</strong>
+          {task.detail !== "No note" && <span>{task.detail}</span>}
+        </div>
+        <button
+          className="task-delete-button pomodoro-queue-remove-button"
+          type="button"
+          aria-label={`Remove ${task.title} from focus queue`}
+          title="Remove from focus queue"
+          onClick={(event) => {
+            event.stopPropagation();
+            onRemove(task.id);
+          }}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M4 7h16" />
+            <path d="M9 7V4h6v3" />
+            <path d="m6 7 1 13h10l1-13" />
+            <path d="M10 11v5" />
+            <path d="M14 11v5" />
+          </svg>
+        </button>
       </article>
       {preview &&
         createPortal(
@@ -415,31 +441,21 @@ export function PomodoroPage({
           </div>
           <div className="pomodoro-queue-actions">
             <button
+              className="pomodoro-queue-action"
               type="button"
               aria-pressed={isAutomaticQueueEnabled}
               onClick={onToggleAutomaticQueue}
             >
               Automatic queue: {isAutomaticQueueEnabled ? "On" : "Off"}
             </button>
-            <button type="button" onClick={onClearQueue} disabled={!queuedTasks.length}>
+            <button
+              className="pomodoro-queue-action"
+              type="button"
+              onClick={onClearQueue}
+              disabled={!queuedTasks.length}
+            >
               Clear queue
             </button>
-            <div
-              className="pomodoro-queue-clear-dropzone"
-              data-pomodoro-queue-clear
-              onDragOver={(event) => {
-                if (event.dataTransfer.types.includes(queueDragMimeType))
-                  event.preventDefault();
-              }}
-              onDrop={(event) => {
-                const taskId = event.dataTransfer.getData(queueDragMimeType);
-                if (!taskId) return;
-                event.preventDefault();
-                onRemoveQueueTask(taskId);
-              }}
-            >
-              Drop to remove
-            </div>
           </div>
         </header>
         {queuedTasks.length ? (

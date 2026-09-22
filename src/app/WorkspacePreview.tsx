@@ -817,6 +817,10 @@ export function WorkspacePreview() {
         task.id === taskId ? { ...task, column, isInKanban: true } : task,
       ),
     );
+  const removeTaskFromKanban = (taskId: string) =>
+    setTasks((current) =>
+      current.map((task) => (task.id === taskId ? { ...task, isInKanban: false } : task)),
+    );
 
   const startPomodoro = () => {
     const seconds = pomodoroSeconds || pomodoroDurationMinutes * 60;
@@ -1144,7 +1148,7 @@ export function WorkspacePreview() {
     task.status === "active" &&
     task.mode === "deadline" &&
     Boolean(task.dueDate && new Date(`${task.dueDate}T23:59:59`) < now);
-  const taskCard = (task: Task) => (
+  const renderTaskCard = (task: Task, onDelete: () => void, deleteLabel: string) => (
     <TaskCard
       key={task.id}
       task={task}
@@ -1174,9 +1178,14 @@ export function WorkspacePreview() {
         if (movingTaskId) reorderTask(movingTaskId, targetTaskId);
       }}
       onComplete={() => completeTask(task)}
-      onDelete={() => deleteTask(task)}
+      onDelete={onDelete}
+      deleteLabel={deleteLabel}
     />
   );
+  const taskCard = (task: Task) =>
+    renderTaskCard(task, () => deleteTask(task), "Delete task");
+  const kanbanTaskCard = (task: Task) =>
+    renderTaskCard(task, () => removeTaskFromKanban(task.id), "Remove from Kanban board");
   const dropOnFolder = (event: DragEvent<HTMLElement>, targetFolderId: string) => {
     const movingTaskId =
       getDraggedTaskId(event) || draggedTaskIdRef.current || draggedTaskId || "";
@@ -1618,14 +1627,7 @@ export function WorkspacePreview() {
         className={`sidebar${isNavigationOpen ? " sidebar-open" : ""}`}
         aria-label="Workspace navigation"
       >
-        <div className="brand">
-          <span className="brand-mark" aria-hidden="true">
-            L
-          </span>
-          Lockin Board
-        </div>
         <nav className="navigation">
-          <p className="nav-label">Pages</p>
           {(["main", "calendar", "pomodoro", "kanban"] as Page[]).map((page) => (
             <a
               className={`nav-item${activePage === page ? " nav-item-selected" : ""}`}
@@ -1787,7 +1789,7 @@ export function WorkspacePreview() {
           <>
             <section className="board-heading" aria-labelledby="board-title">
               <div>
-                <h1 id="board-title">Main</h1>
+                <h1 id="board-title">Lockin Board</h1>
               </div>
             </section>
             <MainOverview
@@ -1862,7 +1864,7 @@ export function WorkspacePreview() {
                   >
                     <path d="M12 5v14M5 12h14" />
                   </svg>
-                  Task
+                  <span>Task</span>
                 </button>
                 <button
                   className="folder-add-button"
@@ -1880,7 +1882,7 @@ export function WorkspacePreview() {
                   >
                     <path d="M12 5v14M5 12h14" />
                   </svg>
-                  Folder
+                  <span>Folder</span>
                 </button>
               </div>
             </div>
@@ -2243,7 +2245,7 @@ export function WorkspacePreview() {
             tasks={kanbanTasks}
             availableTasks={pomodoroTasks}
             folders={folders}
-            renderTask={taskCard}
+            renderTask={kanbanTaskCard}
             onAddTaskToKanban={(taskId) => moveTaskColumn(taskId, "To do")}
             onDropTask={(event, column) => {
               event.preventDefault();

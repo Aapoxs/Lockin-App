@@ -157,12 +157,12 @@ export function FolderCard({
               />
             </label>
             <label className="folder-up-next-control">
-              <span>Hide from Up next</span>
+              <span>Show up next</span>
               <input
                 type="checkbox"
-                checked={Boolean(folder.hideFromUpNext)}
+                checked={!folder.hideFromUpNext}
                 onChange={(event) =>
-                  onUpNextVisibilityChange(folder.id, event.target.checked)
+                  onUpNextVisibilityChange(folder.id, !event.target.checked)
                 }
               />
             </label>

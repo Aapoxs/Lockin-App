@@ -22,6 +22,7 @@ type TaskCardProps = {
   onDropOnTask: (event: DragEvent<HTMLElement>, targetTaskId: string) => void;
   onComplete: () => void;
   onDelete: () => void;
+  deleteLabel?: string;
 };
 
 type DragPreview = {
@@ -47,6 +48,7 @@ export function TaskCard({
   onDropOnTask,
   onComplete,
   onDelete,
+  deleteLabel = "Delete task",
 }: TaskCardProps) {
   const longPressTimer = useRef<number | null>(null);
   const pressOrigin = useRef<{ x: number; y: number } | null>(null);
@@ -317,8 +319,8 @@ export function TaskCard({
           <button
             className="task-delete-button"
             type="button"
-            aria-label={`Delete ${task.title}`}
-            title="Delete task"
+            aria-label={`${deleteLabel}: ${task.title}`}
+            title={deleteLabel}
             onClick={(event) => {
               event.stopPropagation();
               onDelete();

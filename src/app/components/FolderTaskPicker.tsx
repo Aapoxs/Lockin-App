@@ -59,7 +59,6 @@ export function FolderTaskPicker({
         }}
       >
         <span>{label}</span>
-        <span aria-hidden="true">⌄</span>
       </button>
       {isOpen && (
         <div className="folder-task-picker-menu" role="dialog" aria-label="Choose a task">
