@@ -9,6 +9,7 @@ import {
 import { createPortal } from "react-dom";
 import type { Folder, Task } from "../workspace/workspaceTypes";
 import { FolderTaskPicker } from "./FolderTaskPicker";
+import { TrashIcon } from "./TrashIcon";
 
 const queueDragMimeType = "application/x-focusboard-pomodoro-queue";
 
@@ -229,21 +230,7 @@ function PomodoroQueueTask({ task, onReorder, onRemove }: PomodoroQueueTaskProps
             onRemove(task.id);
           }}
         >
-          <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M4 7h16" />
-            <path d="M9 7V4h6v3" />
-            <path d="m6 7 1 13h10l1-13" />
-            <path d="M10 11v5" />
-            <path d="M14 11v5" />
-          </svg>
+          <TrashIcon />
         </button>
       </article>
       {preview &&
@@ -436,7 +423,6 @@ export function PomodoroPage({
       <section className="pomodoro-queue-section" aria-labelledby="pomodoro-queue-title">
         <header>
           <div>
-            <p className="eyebrow">Up next</p>
             <h2 id="pomodoro-queue-title">Focus queue</h2>
           </div>
           <div className="pomodoro-queue-actions">

@@ -60,7 +60,7 @@
   background: var(--theme-text) !important;
 }
 .folder-section {
-  margin-top: 18px;
+  margin-top: 14px;
   padding: 0;
   background: transparent;
   border: 0;
@@ -68,8 +68,8 @@
 }
 .folder-section-heading {
   align-items: center;
-  /* Match the section's outer margin, so the toolbar sits in an even vertical gap. */
-  padding: 0 2px 18px;
+  /* Match the main overview rhythm above and below the toolbar. */
+  padding: 0 2px 14px;
 }
 .focusboard-shell.custom-theme .folder-section {
   background: transparent !important;
@@ -562,17 +562,18 @@
   border-color: var(--theme-text) !important;
 }
 
-/* Folder dashboard: fixed-size containers and compact list rows keep the page calm. */
+/* Folder cards grow only for the task rows they show. Grid rows stretch paired folders
+   to the taller sibling so adjacent cards retain a clean shared edge. */
 .folder-group-cards {
   /* A folder needs enough room to keep its two-up task grid readable. */
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
   gap: 12px;
-  align-items: start;
+  align-items: stretch;
 }
 .folder-group-cards .folder-dropzone {
   display: flex;
   width: auto;
-  height: 392px;
+  height: auto;
   min-height: 0;
   flex-direction: column;
   padding: 12px;
@@ -592,15 +593,14 @@
   border: 1px dashed var(--folder-color);
   border-radius: 8px;
 }
-.folder-task-list {
+.folder-group-cards .folder-task-list {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   min-height: 0;
-  max-height: 320px;
-  flex: 0 1 auto;
+  max-height: none;
+  flex: 0 0 auto;
   align-content: start;
-  overflow-x: hidden;
-  overflow-y: auto;
-  padding-right: 2px;
+  overflow: visible;
+  padding-right: 0;
 }
 .folder-task-list > .task-card:only-child,
 .folder-task-list > .task-card:nth-child(odd):last-child {

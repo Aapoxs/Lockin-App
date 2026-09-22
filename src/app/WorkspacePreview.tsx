@@ -5,6 +5,7 @@ import {
   useState,
   type CSSProperties,
   type DragEvent,
+  type TouchEvent,
 } from "react";
 import {
   clearWorkspace,
@@ -45,6 +46,7 @@ import { PomodoroPage } from "./components/PomodoroPage";
 import { SidebarFolderItem } from "./components/SidebarFolderItem";
 import { loadPomodoro, POMODORO_STORAGE_KEY } from "./pomodoro/pomodoroStorage";
 import { TaskCard } from "./components/TaskCard";
+import { TrashIcon } from "./components/TrashIcon";
 import { UtilityBar } from "./components/UtilityBar";
 import {
   folderGroups,
@@ -106,6 +108,19 @@ const normalizeTaskNote = (value: string) =>
     .join("\n")
     .slice(0, maxTaskNoteLength);
 
+type CalendarTouchDrag = {
+  source: HTMLElement;
+  taskId?: string;
+  entryId?: string;
+  startX: number;
+  startY: number;
+  x: number;
+  y: number;
+  timer: number | null;
+  preview: HTMLDivElement | null;
+  dropTarget: HTMLElement | null;
+};
+
 export function WorkspacePreview() {
   // Workspace and navigation state
   const [tasks, setTasks] = useState(initialTasks);
@@ -119,7 +134,6 @@ export function WorkspacePreview() {
   >(null);
   const [isCalendarTrayOpen, setIsCalendarTrayOpen] = useState(false);
   const [calendarTrayFolder, setCalendarTrayFolder] = useState<Destination | null>(null);
-  const [visibleWeekDayCount, setVisibleWeekDayCount] = useState(7);
   const [openFolderMenu, setOpenFolderMenu] = useState<string | null>(null);
   const [collapsedFolderGroups, setCollapsedFolderGroups] = useState<Set<FolderGroup>>(
     () => new Set(),
@@ -194,8 +208,8 @@ export function WorkspacePreview() {
   const [isWorkspaceReady, setIsWorkspaceReady] = useState(false);
   const [storageStatus, setStorageStatus] = useState("Opening local workspace…");
   const backupInputRef = useRef<HTMLInputElement>(null);
-  const weekCalendarRef = useRef<HTMLDivElement>(null);
   const draggedTaskIdRef = useRef<string | null>(null);
+  const calendarTouchDragRef = useRef<CalendarTouchDrag | null>(null);
   const folderGroupButtonFlashTimer = useRef<number | null>(null);
 
   // Load and persist the local workspace
@@ -391,24 +405,6 @@ export function WorkspacePreview() {
     const interval = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(interval);
   }, [activePage]);
-
-  useEffect(() => {
-    if (activePage !== "calendar" || calendarView !== "week" || !weekCalendarRef.current)
-      return;
-    const calendar = weekCalendarRef.current;
-    const updateVisibleDays = () => {
-      const nextCount = Math.max(
-        2,
-        Math.min(7, Math.floor((calendar.clientWidth - 48) / 86)),
-      );
-      setVisibleWeekDayCount(nextCount);
-      if (nextCount < 5) setIsCalendarTrayOpen(false);
-    };
-    updateVisibleDays();
-    const observer = new ResizeObserver(updateVisibleDays);
-    observer.observe(calendar);
-    return () => observer.disconnect();
-  }, [activePage, calendarView]);
 
   // Global interaction handlers
   useEffect(() => {
@@ -872,23 +868,20 @@ export function WorkspacePreview() {
 
   const setCalendarSlotDragPreview = (event: DragEvent<HTMLElement>) => {
     const source = event.currentTarget;
-    const folderTaskCard = document.querySelector<HTMLElement>(
-      ".folder-task-list .task-card",
+    const cell = document.querySelector<HTMLElement>(
+      calendarView === "month" ? ".month-day" : ".hour-slot",
     );
-    const previewSource = source.closest(".folder-task-list")
-      ? source
-      : (folderTaskCard ?? source);
-    const sourceBounds = previewSource.getBoundingClientRect();
+    const cellBounds = cell?.getBoundingClientRect() ?? source.getBoundingClientRect();
     const preview = document.createElement("div");
     preview.classList.add("calendar-slot-drag-preview", "task-drag-preview");
     preview.textContent =
       source.querySelector("h3, strong")?.textContent?.trim() ?? "Task";
 
-    const width = Math.max(1, sourceBounds.width);
-    const height = Math.max(1, sourceBounds.height);
+    const width = Math.max(1, cellBounds.width);
+    const height = Math.max(1, cellBounds.height);
     preview.style.width = `${width}px`;
     preview.style.height = `${height}px`;
-    const sourceStyle = getComputedStyle(previewSource);
+    const sourceStyle = getComputedStyle(source);
     const titleStyle = getComputedStyle(
       source.querySelector<HTMLElement>("h3, strong") ?? source,
     );
@@ -920,6 +913,7 @@ export function WorkspacePreview() {
     event.dataTransfer.setData("application/x-focusboard-calendar-entry", entryId);
     event.dataTransfer.setData("text/plain", `calendar:${entryId}`);
     event.dataTransfer.effectAllowed = "copyMove";
+    setCalendarSlotDragPreview(event);
   };
 
   const getDraggedTaskId = (event: DragEvent<HTMLElement>) => {
@@ -935,6 +929,133 @@ export function WorkspacePreview() {
     const plainText = event.dataTransfer.getData("text/plain");
     return internalId || (plainText.startsWith("calendar:") ? plainText.slice(9) : "");
   };
+
+  const clearCalendarTouchDrag = () => {
+    const drag = calendarTouchDragRef.current;
+    if (!drag) return;
+    if (drag.timer !== null) window.clearTimeout(drag.timer);
+    drag.source.classList.remove("calendar-touch-source-dragging");
+    drag.dropTarget?.classList.remove("calendar-touch-drop-target");
+    drag.preview?.remove();
+    calendarTouchDragRef.current = null;
+  };
+
+  const calendarTouchDropTarget = (drag: CalendarTouchDrag, x: number, y: number) => {
+    const slot = document
+      .elementFromPoint(x, y)
+      ?.closest<HTMLElement>("[data-calendar-slot]");
+    if (!slot || !drag.taskId) return slot ?? null;
+    return canScheduleTaskAt(
+      drag.taskId,
+      slot.dataset.calendarSlot ?? "",
+      calendarEntries,
+    )
+      ? slot
+      : null;
+  };
+
+  const onCalendarTouchStart = (event: TouchEvent<HTMLElement>) => {
+    if (event.touches.length !== 1 || !(event.target instanceof Element)) return;
+    if (event.target.closest("button, select, input, label")) return;
+    const source = event.target.closest<HTMLElement>(
+      "[data-calendar-touch-task-id], [data-calendar-touch-entry-id]",
+    );
+    if (!source || source.dataset.calendarTouchEntryId?.startsWith("recurring:")) return;
+    clearCalendarTouchDrag();
+    const touch = event.touches[0];
+    const drag: CalendarTouchDrag = {
+      source,
+      taskId: source.dataset.calendarTouchTaskId,
+      entryId: source.dataset.calendarTouchEntryId,
+      startX: touch.clientX,
+      startY: touch.clientY,
+      x: touch.clientX,
+      y: touch.clientY,
+      timer: null,
+      preview: null,
+      dropTarget: null,
+    };
+    calendarTouchDragRef.current = drag;
+    drag.timer = window.setTimeout(() => {
+      if (calendarTouchDragRef.current !== drag) return;
+      drag.timer = null;
+      const cell = document.querySelector<HTMLElement>(
+        calendarView === "month" ? ".month-day" : ".hour-slot",
+      );
+      if (!cell) return;
+      const bounds = cell.getBoundingClientRect();
+      const sourceStyle = getComputedStyle(source);
+      const preview = document.createElement("div");
+      preview.className = "calendar-touch-drag-preview";
+      preview.textContent = source.querySelector("strong")?.textContent ?? "Task";
+      preview.style.width = `${bounds.width}px`;
+      preview.style.height = `${bounds.height}px`;
+      preview.style.left = `${drag.x}px`;
+      preview.style.top = `${drag.y}px`;
+      preview.style.setProperty("--drag-preview-text", sourceStyle.color);
+      preview.style.setProperty("--drag-preview-background", sourceStyle.backgroundColor);
+      preview.style.setProperty("--drag-preview-border", sourceStyle.borderColor);
+      document.body.append(preview);
+      drag.preview = preview;
+      source.classList.add("calendar-touch-source-dragging");
+    }, 180);
+  };
+
+  const onCalendarTouchMove = (event: TouchEvent<HTMLElement>) => {
+    const drag = calendarTouchDragRef.current;
+    const touch = event.touches[0];
+    if (!drag || !touch) return;
+    drag.x = touch.clientX;
+    drag.y = touch.clientY;
+    if (!drag.preview) {
+      if (Math.hypot(drag.x - drag.startX, drag.y - drag.startY) > 10)
+        clearCalendarTouchDrag();
+      return;
+    }
+    event.preventDefault();
+    drag.preview.style.left = `${drag.x}px`;
+    drag.preview.style.top = `${drag.y}px`;
+
+    const canvas = document.querySelector<HTMLElement>(".calendar-grid-scroll");
+    if (canvas) {
+      const bounds = canvas.getBoundingClientRect();
+      if (drag.x > bounds.right - 36) canvas.scrollLeft += 12;
+      else if (drag.x < bounds.left + 36) canvas.scrollLeft -= 12;
+    }
+    if (drag.y < 70) window.scrollBy(0, -12);
+    else if (drag.y > window.innerHeight - 70) window.scrollBy(0, 12);
+
+    const target = calendarTouchDropTarget(drag, drag.x, drag.y);
+    if (target === drag.dropTarget) return;
+    drag.dropTarget?.classList.remove("calendar-touch-drop-target");
+    target?.classList.add("calendar-touch-drop-target");
+    drag.dropTarget = target;
+  };
+
+  const onCalendarTouchEnd = (event: TouchEvent<HTMLElement>) => {
+    const drag = calendarTouchDragRef.current;
+    if (!drag) return;
+    const touch = event.changedTouches[0];
+    const target =
+      drag.preview && touch
+        ? calendarTouchDropTarget(drag, touch.clientX, touch.clientY)
+        : null;
+    const slot = target?.dataset.calendarSlot;
+    const taskId = drag.taskId;
+    const entryId = drag.entryId;
+    clearCalendarTouchDrag();
+    if (!slot) return;
+    const [day, time] = slot.split("T");
+    if (taskId) scheduleTask(taskId, day, Number(time.slice(0, 2)));
+    else if (entryId)
+      moveCalendarEntry(
+        entryId,
+        day,
+        calendarView === "month" ? 9 : Number(time.slice(0, 2)),
+      );
+  };
+
+  useEffect(() => () => clearCalendarTouchDrag(), []);
 
   // Folder operations
   const addFolder = () => {
@@ -1295,7 +1416,6 @@ export function WorkspacePreview() {
       day: date.getDate(),
     };
   });
-  const visibleWeekDays = weekDays.slice(0, visibleWeekDayCount);
   const scheduleHours = Array.from({ length: 24 }, (_, index) => index);
   const calendarHours = [...scheduleHours.slice(6), ...scheduleHours.slice(0, 6)];
   const calendarTrayTasks = calendarTrayFolder
@@ -1383,15 +1503,14 @@ export function WorkspacePreview() {
     { length: 12 },
     (_, index) => new Date(currentDate.getFullYear(), currentDate.getMonth() + index, 1),
   );
+  const numericDayMonth = (date: Date) => `${date.getDate()}.${date.getMonth() + 1}`;
+  const numericMonthYear = (date: Date) => `${date.getMonth() + 1}.${date.getFullYear()}`;
   const calendarPeriodLabel =
     calendarView === "week"
-      ? `${new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(weekStart)} – ${new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 6))}`
+      ? `${numericDayMonth(weekStart)} - ${numericDayMonth(new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 6))}`
       : calendarView === "month"
-        ? new Intl.DateTimeFormat(undefined, {
-            month: "long",
-            year: "numeric",
-          }).format(monthStart)
-        : `${new Intl.DateTimeFormat(undefined, { month: "short", year: "numeric" }).format(yearMonths[0])} – ${new Intl.DateTimeFormat(undefined, { month: "short", year: "numeric" }).format(yearMonths[11])}`;
+        ? numericMonthYear(monthStart)
+        : `${numericMonthYear(yearMonths[0])} - ${numericMonthYear(yearMonths[11])}`;
   const calendarPeriodName =
     calendarView === "week" ? "week" : calendarView === "month" ? "month" : "year";
   const selectedPomodoroTask = pomodoroTasks.find(
@@ -1586,6 +1705,20 @@ export function WorkspacePreview() {
     setIsCalendarTrayOpen((current) => !current);
     setCalendarTrayFolder(null);
   };
+  const calendarTaskToggle = (
+    <button
+      className="calendar-task-toggle calendar-canvas-task-toggle"
+      type="button"
+      aria-label={isCalendarTrayOpen ? "Close task folders" : "Open task folders"}
+      title="Tasks to schedule"
+      aria-expanded={isCalendarTrayOpen}
+      onClick={toggleCalendarTray}
+    >
+      <span aria-hidden="true" />
+      <span aria-hidden="true" />
+      <span aria-hidden="true" />
+    </button>
+  );
 
   if (!isWorkspaceReady) {
     return <main className="startup-screen">Opening your local workspace…</main>;
@@ -1644,7 +1777,6 @@ export function WorkspacePreview() {
             >
               <PageIcon page={page} />
               {page[0].toUpperCase() + page.slice(1)}
-              {page === "main" && <b>{mainTasks.length}</b>}
             </a>
           ))}
           <a
@@ -1953,7 +2085,6 @@ export function WorkspacePreview() {
               calendarView={calendarView}
               periodName={calendarPeriodName}
               periodLabel={calendarPeriodLabel}
-              onClear={clearCalendar}
               onToday={() => setCalendarDate(new Date())}
               onShiftPeriod={shiftCalendarDate}
               onViewChange={(view) => {
@@ -1963,8 +2094,12 @@ export function WorkspacePreview() {
             />
             <div
               className={`calendar-workspace${isCalendarTrayOpen ? " calendar-workspace-tray-open" : ""}`}
+              onTouchStart={onCalendarTouchStart}
+              onTouchMove={onCalendarTouchMove}
+              onTouchEnd={onCalendarTouchEnd}
+              onTouchCancel={clearCalendarTouchDrag}
             >
-              {isCalendarTrayOpen && calendarView !== "year" && (
+              {isCalendarTrayOpen && (
                 <CalendarTray
                   calendarView={calendarView}
                   selectedFolder={calendarTrayFolder}
@@ -1973,6 +2108,7 @@ export function WorkspacePreview() {
                   activeTasks={activeTasks}
                   tasks={calendarTrayTasks}
                   onSelectFolder={setCalendarTrayFolder}
+                  onClearCalendar={clearCalendar}
                   onDropToFolder={dropOn}
                   onDragTaskStart={dragTaskStart}
                   onDragTaskEnd={clearDraggedTask}
@@ -1982,204 +2118,192 @@ export function WorkspacePreview() {
                 />
               )}
               <section className="calendar-canvas">
-                {calendarView === "month" && (
-                  <button
-                    className="calendar-task-toggle calendar-canvas-task-toggle"
-                    type="button"
-                    aria-label="Open task folders"
-                    title="Tasks to schedule"
-                    aria-expanded={isCalendarTrayOpen}
-                    onClick={toggleCalendarTray}
-                  >
-                    <span />
-                    <span />
-                    <span />
-                  </button>
-                )}
-                {calendarView === "week" && (
-                  <div
-                    className="week-calendar"
-                    ref={weekCalendarRef}
-                    style={
-                      {
-                        "--visible-days": visibleWeekDays.length,
-                      } as CSSProperties
-                    }
-                  >
-                    <div className="week-corner">
-                      <button
-                        className="calendar-task-toggle"
-                        type="button"
-                        aria-label="Open task folders"
-                        title="Tasks to schedule"
-                        aria-expanded={isCalendarTrayOpen}
-                        onClick={toggleCalendarTray}
-                      >
-                        <span />
-                        <span />
-                        <span />
-                      </button>
-                    </div>
-                    {visibleWeekDays.map((day) => (
-                      <div className="week-day-label" key={day.key}>
-                        {day.label}
-                        <b>{day.day}</b>
-                      </div>
-                    ))}
-                    {calendarHours.map((hour) => (
-                      <Fragment key={hour}>
-                        <div className="hour-label">
-                          {String(hour).padStart(2, "0")}:00
+                <div
+                  className={`calendar-grid-scroll calendar-grid-scroll-${calendarView}`}
+                  hidden={calendarView === "year"}
+                >
+                  {calendarView === "week" && (
+                    <div className="week-calendar">
+                      <div className="week-corner">{calendarTaskToggle}</div>
+                      {weekDays.map((day) => (
+                        <div className="week-day-label" key={day.key}>
+                          {day.label}
+                          <b>{day.day}</b>
                         </div>
-                        {visibleWeekDays.map((day) => {
-                          const scheduledAt = `${day.key}T${String(hour).padStart(2, "0")}:00`;
-                          return (
-                            <div
-                              className="hour-slot"
-                              key={scheduledAt}
-                              onDragOver={(event) => {
-                                const taskId =
-                                  draggedTaskIdRef.current ??
-                                  draggedTaskId ??
-                                  getDraggedTaskId(event);
-                                if (
-                                  taskId &&
-                                  !canScheduleTaskAt(taskId, scheduledAt, calendarEntries)
-                                ) {
-                                  event.dataTransfer.dropEffect = "none";
-                                  return;
-                                }
-                                event.preventDefault();
-                                event.dataTransfer.dropEffect = "copy";
-                              }}
-                              onDrop={(event) => {
-                                event.preventDefault();
-                                const taskId =
-                                  getDraggedTaskId(event) ||
-                                  draggedTaskIdRef.current ||
-                                  draggedTaskId ||
-                                  "";
-                                const entryId = getDraggedCalendarEntryId(event);
-                                if (
-                                  taskId &&
-                                  canScheduleTaskAt(taskId, scheduledAt, calendarEntries)
-                                )
-                                  scheduleTask(taskId, day.key, hour);
-                                if (entryId) moveCalendarEntry(entryId, day.key, hour);
-                              }}
-                            >
-                              {[
-                                ...scheduledTasks.filter(
-                                  ({ entry }) => entry.scheduledAt === scheduledAt,
-                                ),
-                                ...recurringTasksForSlot(scheduledAt),
-                              ]
-                                .filter(
-                                  ({ entry }, index, entries) =>
-                                    entries.findIndex(
-                                      (candidate) =>
-                                        calendarSeriesKey(candidate.entry) ===
-                                          calendarSeriesKey(entry) &&
-                                        candidate.entry.scheduledAt === entry.scheduledAt,
-                                    ) === index,
-                                )
-                                .map(({ entry, task }) => (
-                                  <CalendarScheduledEvent
-                                    key={entry.id}
-                                    entry={entry}
-                                    task={task}
-                                    color={calendarTaskColor(task)}
-                                    countdown={calendarEntryCountdown(entry)}
-                                    isHighlighted={
-                                      highlightedCalendarEntryId === entry.id
-                                    }
-                                    menu={
-                                      <CalendarEntryMenu
-                                        {...calendarEntryMenuProps(entry, task)}
-                                      />
-                                    }
-                                    onDragStart={(event) =>
-                                      dragCalendarEntryStart(event, entry.id)
-                                    }
-                                    onReopen={() => reopenCalendarEntry(entry, task)}
+                      ))}
+                      {calendarHours.map((hour) => (
+                        <Fragment key={hour}>
+                          <div className="hour-label">
+                            {String(hour).padStart(2, "0")}:00
+                          </div>
+                          {weekDays.map((day) => {
+                            const scheduledAt = `${day.key}T${String(hour).padStart(2, "0")}:00`;
+                            return (
+                              <div
+                                className="hour-slot"
+                                key={scheduledAt}
+                                data-calendar-slot={scheduledAt}
+                                onDragOver={(event) => {
+                                  const taskId =
+                                    draggedTaskIdRef.current ??
+                                    draggedTaskId ??
+                                    getDraggedTaskId(event);
+                                  if (
+                                    taskId &&
+                                    !canScheduleTaskAt(
+                                      taskId,
+                                      scheduledAt,
+                                      calendarEntries,
+                                    )
+                                  ) {
+                                    event.dataTransfer.dropEffect = "none";
+                                    return;
+                                  }
+                                  event.preventDefault();
+                                  event.dataTransfer.dropEffect = "copy";
+                                }}
+                                onDrop={(event) => {
+                                  event.preventDefault();
+                                  const taskId =
+                                    getDraggedTaskId(event) ||
+                                    draggedTaskIdRef.current ||
+                                    draggedTaskId ||
+                                    "";
+                                  const entryId = getDraggedCalendarEntryId(event);
+                                  if (
+                                    taskId &&
+                                    canScheduleTaskAt(
+                                      taskId,
+                                      scheduledAt,
+                                      calendarEntries,
+                                    )
+                                  )
+                                    scheduleTask(taskId, day.key, hour);
+                                  if (entryId) moveCalendarEntry(entryId, day.key, hour);
+                                }}
+                              >
+                                {[
+                                  ...scheduledTasks.filter(
+                                    ({ entry }) => entry.scheduledAt === scheduledAt,
+                                  ),
+                                  ...recurringTasksForSlot(scheduledAt),
+                                ]
+                                  .filter(
+                                    ({ entry }, index, entries) =>
+                                      entries.findIndex(
+                                        (candidate) =>
+                                          calendarSeriesKey(candidate.entry) ===
+                                            calendarSeriesKey(entry) &&
+                                          candidate.entry.scheduledAt ===
+                                            entry.scheduledAt,
+                                      ) === index,
+                                  )
+                                  .map(({ entry, task }) => (
+                                    <CalendarScheduledEvent
+                                      key={entry.id}
+                                      entry={entry}
+                                      task={task}
+                                      color={calendarTaskColor(task)}
+                                      countdown={calendarEntryCountdown(entry)}
+                                      isHighlighted={
+                                        highlightedCalendarEntryId === entry.id
+                                      }
+                                      menu={
+                                        <CalendarEntryMenu
+                                          {...calendarEntryMenuProps(entry, task)}
+                                        />
+                                      }
+                                      onDragStart={(event) =>
+                                        dragCalendarEntryStart(event, entry.id)
+                                      }
+                                      onReopen={() => reopenCalendarEntry(entry, task)}
+                                    />
+                                  ))}
+                              </div>
+                            );
+                          })}
+                        </Fragment>
+                      ))}
+                    </div>
+                  )}
+                  {calendarView === "month" && (
+                    <div className="month-calendar">
+                      {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
+                        <b className="month-weekday-label" key={day}>
+                          {day === "Mon" && calendarTaskToggle}
+                          {day}
+                        </b>
+                      ))}
+                      {monthDays.map((day) => (
+                        <div
+                          className={`month-day${day.inMonth ? "" : " month-day-muted"}`}
+                          key={day.key}
+                          data-calendar-slot={`${day.key}T06:00`}
+                          onDragOver={(event) => {
+                            const taskId =
+                              draggedTaskIdRef.current ??
+                              draggedTaskId ??
+                              getDraggedTaskId(event);
+                            const scheduledAt = `${day.key}T06:00`;
+                            if (
+                              taskId &&
+                              !canScheduleTaskAt(taskId, scheduledAt, calendarEntries)
+                            ) {
+                              event.dataTransfer.dropEffect = "none";
+                              return;
+                            }
+                            event.preventDefault();
+                            event.dataTransfer.dropEffect = taskId ? "copy" : "move";
+                          }}
+                          onDrop={(event) => {
+                            event.preventDefault();
+                            const taskId =
+                              getDraggedTaskId(event) ||
+                              draggedTaskIdRef.current ||
+                              draggedTaskId ||
+                              "";
+                            const entryId = getDraggedCalendarEntryId(event);
+                            if (
+                              taskId &&
+                              canScheduleTaskAt(
+                                taskId,
+                                `${day.key}T06:00`,
+                                calendarEntries,
+                              )
+                            )
+                              scheduleTask(taskId, day.key, 6);
+                            if (entryId) moveCalendarEntry(entryId, day.key, 9);
+                          }}
+                        >
+                          <span>{day.day}</span>
+                          {scheduledTasks
+                            .filter(({ entry }) => entry.scheduledAt.startsWith(day.key))
+                            .map(({ entry, task }) => (
+                              <CalendarScheduledEvent
+                                key={entry.id}
+                                entry={entry}
+                                task={task}
+                                color={calendarTaskColor(task)}
+                                countdown={calendarEntryCountdown(entry)}
+                                menu={
+                                  <CalendarEntryMenu
+                                    {...calendarEntryMenuProps(entry, task)}
                                   />
-                                ))}
-                            </div>
-                          );
-                        })}
-                      </Fragment>
-                    ))}
-                  </div>
-                )}
-                {calendarView === "month" && (
-                  <div className="month-calendar">
-                    {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
-                      <b key={day}>{day}</b>
-                    ))}
-                    {monthDays.map((day) => (
-                      <div
-                        className={`month-day${day.inMonth ? "" : " month-day-muted"}`}
-                        key={day.key}
-                        onDragOver={(event) => {
-                          const taskId =
-                            draggedTaskIdRef.current ??
-                            draggedTaskId ??
-                            getDraggedTaskId(event);
-                          const scheduledAt = `${day.key}T06:00`;
-                          if (
-                            taskId &&
-                            !canScheduleTaskAt(taskId, scheduledAt, calendarEntries)
-                          ) {
-                            event.dataTransfer.dropEffect = "none";
-                            return;
-                          }
-                          event.preventDefault();
-                          event.dataTransfer.dropEffect = taskId ? "copy" : "move";
-                        }}
-                        onDrop={(event) => {
-                          event.preventDefault();
-                          const taskId =
-                            getDraggedTaskId(event) ||
-                            draggedTaskIdRef.current ||
-                            draggedTaskId ||
-                            "";
-                          const entryId = getDraggedCalendarEntryId(event);
-                          if (
-                            taskId &&
-                            canScheduleTaskAt(taskId, `${day.key}T06:00`, calendarEntries)
-                          )
-                            scheduleTask(taskId, day.key, 6);
-                          if (entryId) moveCalendarEntry(entryId, day.key, 9);
-                        }}
-                      >
-                        <span>{day.day}</span>
-                        {scheduledTasks
-                          .filter(({ entry }) => entry.scheduledAt.startsWith(day.key))
-                          .map(({ entry, task }) => (
-                            <CalendarScheduledEvent
-                              key={entry.id}
-                              entry={entry}
-                              task={task}
-                              color={calendarTaskColor(task)}
-                              countdown={calendarEntryCountdown(entry)}
-                              menu={
-                                <CalendarEntryMenu
-                                  {...calendarEntryMenuProps(entry, task)}
-                                />
-                              }
-                              onDragStart={(event) =>
-                                dragCalendarEntryStart(event, entry.id)
-                              }
-                              onReopen={() => reopenCalendarEntry(entry, task)}
-                            />
-                          ))}
-                      </div>
-                    ))}
-                  </div>
-                )}
+                                }
+                                onDragStart={(event) =>
+                                  dragCalendarEntryStart(event, entry.id)
+                                }
+                                onReopen={() => reopenCalendarEntry(entry, task)}
+                              />
+                            ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 {calendarView === "year" && (
                   <div className="year-calendar">
-                    {yearMonths.map((month) => {
+                    {yearMonths.map((month, index) => {
                       const name = new Intl.DateTimeFormat(undefined, {
                         month: "long",
                         year: "numeric",
@@ -2190,6 +2314,7 @@ export function WorkspacePreview() {
                       ).length;
                       return (
                         <div key={name}>
+                          {index === 0 && calendarTaskToggle}
                           <h2>{name}</h2>
                           <p>
                             {count} {count === 1 ? "task" : "tasks"}
@@ -2264,7 +2389,6 @@ export function WorkspacePreview() {
                   complete.
                 </p>
               </div>
-              <span>{completedTasks.length}</span>
             </header>
             <section
               className="today-completed-section"
@@ -2360,21 +2484,7 @@ export function WorkspacePreview() {
                           title="Clear calendar block"
                           onClick={() => clearCalendarSlot(entry, task)}
                         >
-                          <svg
-                            viewBox="0 0 24 24"
-                            aria-hidden="true"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.8"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M4 7h16" />
-                            <path d="M9 7V4h6v3" />
-                            <path d="m6 7 1 13h10l1-13" />
-                            <path d="M10 11v5" />
-                            <path d="M14 11v5" />
-                          </svg>
+                          <TrashIcon />
                         </button>
                       </div>
                     </article>
@@ -2429,21 +2539,7 @@ export function WorkspacePreview() {
                           title="Delete task"
                           onClick={() => deleteTask(task)}
                         >
-                          <svg
-                            viewBox="0 0 24 24"
-                            aria-hidden="true"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.8"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M4 7h16" />
-                            <path d="M9 7V4h6v3" />
-                            <path d="m6 7 1 13h10l1-13" />
-                            <path d="M10 11v5" />
-                            <path d="M14 11v5" />
-                          </svg>
+                          <TrashIcon />
                         </button>
                       </div>
                     </article>

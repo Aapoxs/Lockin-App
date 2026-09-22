@@ -1001,22 +1001,6 @@ kbd {
   align-items: center;
   gap: 8px;
 }
-.calendar-clear-all {
-  height: 30px;
-  padding: 0 9px;
-  border: 1px solid #52525b;
-  border-radius: 7px;
-  color: #d4d4d8;
-  background: #18181b;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.calendar-clear-all:hover {
-  color: #09090b;
-  background: #fff;
-}
 .calendar-nav {
   display: flex;
   align-items: center;

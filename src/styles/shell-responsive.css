@@ -123,21 +123,6 @@
   .folder-group-cards {
     grid-template-columns: 1fr;
   }
-  .folder-group-cards .folder-dropzone {
-    height: auto;
-    min-height: 0;
-  }
-  .folder-task-list {
-    max-height: 320px;
-  }
-  .folder-group-cards .folder-dropzone {
-    height: auto;
-  }
-  .folder-task-list {
-    max-height: none;
-    overflow: visible;
-    padding-right: 0;
-  }
 }
 @media (max-width: 620px) {
   .folder-section-heading {
@@ -152,27 +137,6 @@
 }
 
 @media (max-width: 760px) {
-  .folder-section-actions
-    .folder-group-visibility-button:hover:not(.folder-group-visibility-flash) {
-    color: #d4d4d8;
-    background: transparent;
-    border-color: #52525b;
-  }
-  .focusboard-shell.custom-theme
-    .folder-section-actions
-    .folder-group-visibility-button:hover:not(.folder-group-visibility-flash) {
-    color: var(--theme-text) !important;
-    background: color-mix(
-      in srgb,
-      var(--theme-main) 88%,
-      var(--theme-text) 12%
-    ) !important;
-    border-color: color-mix(
-      in srgb,
-      var(--theme-text) 30%,
-      var(--theme-main) 70%
-    ) !important;
-  }
   .folder-group-visibility-button.folder-group-visibility-flash {
     animation: folder-group-button-feedback 1s ease-out;
   }
@@ -214,7 +178,7 @@
     overflow-x: hidden;
   }
   .utility-bar {
-    top: 10px;
+    top: 12px;
     right: clamp(6px, 2.5vw, 10px);
   }
   .mobile-menu-button {
@@ -225,7 +189,7 @@
   }
   .board-heading {
     min-height: 0;
-    padding: 10px 2px 16px;
+    padding: 12px 2px;
   }
   .board-heading h1 {
     font-size: 28px;
@@ -293,11 +257,11 @@
     margin-top: 8px;
   }
   .folder-section {
-    margin-top: 14px;
+    margin-top: 12px;
   }
   .folder-section-heading {
     gap: 12px;
-    padding-bottom: 14px;
+    padding-bottom: 12px;
   }
   .folder-section-heading h2 {
     font-size: 19px;

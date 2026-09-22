@@ -34,6 +34,10 @@
     var(--theme-main) 75%
   ) !important;
 }
+.focusboard-shell.custom-theme .calendar-canvas {
+  background: transparent !important;
+  border: 0 !important;
+}
 .focusboard-shell.custom-theme :is(.month-day, .main-month-day, .hour-slot) {
   background: var(--theme-main) !important;
   border-color: color-mix(
@@ -54,8 +58,7 @@
     .brand-mark,
     .nav-item-selected > span,
     .folder-dropzone header > span:last-child,
-    .calendar-view-switch button[aria-selected="true"],
-    .calendar-nav-today
+    .calendar-view-switch button[aria-selected="true"]
   ) {
   color: var(--theme-main) !important;
   background: var(--theme-text) !important;
@@ -135,6 +138,9 @@
   background: #18181b;
   border: 1px solid #3f3f46;
   border-radius: 10px;
+}
+.pomodoro-task-panel {
+  padding: 18px;
 }
 .pomodoro-clock {
   text-align: center;
@@ -687,12 +693,12 @@
 .utility-bar {
   position: absolute;
   z-index: 4;
-  top: 10px;
+  top: 14px;
   right: 24px;
   min-height: 0;
 }
 .board-heading {
-  padding: 10px 0 20px;
+  padding: 14px 0;
 }
 .folder-section {
   margin-top: 32px;
@@ -833,7 +839,6 @@
 /* Complete the custom-theme treatment for compact controls and calendar task states. */
 .focusboard-shell.custom-theme
   :is(
-    .calendar-clear-all,
     .calendar-nav,
     .calendar-view-switch,
     .timer,
@@ -851,7 +856,6 @@
 }
 .focusboard-shell.custom-theme
   :is(
-    .calendar-clear-all,
     .calendar-nav button,
     .calendar-nav > span,
     .calendar-view-switch button,
@@ -867,11 +871,7 @@
   background: var(--theme-text) !important;
 }
 .focusboard-shell.custom-theme
-  :is(
-    .calendar-nav-today,
-    .calendar-view-switch button[aria-selected="true"],
-    .timer button
-  ) {
+  :is(.calendar-view-switch button[aria-selected="true"], .timer button) {
   color: var(--theme-main) !important;
   background: var(--theme-text) !important;
   border-color: var(--theme-text) !important;

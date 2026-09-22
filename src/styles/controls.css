@@ -10,13 +10,16 @@
   --control-text: var(--theme-text);
   --control-primary-surface: var(--theme-text);
   --control-primary-text: var(--theme-main);
+  --counter-surface: var(--theme-text);
+  --counter-text: var(--theme-main);
+  --counter-border: color-mix(in srgb, var(--theme-text) 78%, var(--theme-main) 22%);
 }
 
 .focusboard-shell.custom-theme :is(button, a, input, select, textarea):focus-visible {
   outline-color: color-mix(in srgb, var(--theme-text) 78%, var(--theme-main) 22%);
 }
 
-/* Primary controls are reserved for creating, saving, starting, and returning to today. */
+/* Direct actions share a neutral resting state; selected controls alone use the inverse treatment. */
 .focusboard-shell.custom-theme
   :is(
     .primary-action,
@@ -25,17 +28,11 @@
     .calendar-nav-today
   ) {
   min-height: 38px;
-  border: 1px solid
-    color-mix(
-      in srgb,
-      var(--control-primary-text) 42%,
-      var(--control-primary-surface) 58%
-    ) !important;
+  border: 1px solid var(--control-border) !important;
   border-radius: 7px;
-  color: var(--control-primary-text) !important;
-  background: var(--control-primary-surface) !important;
-  box-shadow: inset 0 0 0 1px
-    color-mix(in srgb, var(--control-primary-text) 52%, transparent) !important;
+  color: var(--control-text) !important;
+  background: var(--control-surface) !important;
+  box-shadow: none !important;
   font: inherit;
   font-size: 11px;
   font-weight: 650;
@@ -53,9 +50,9 @@
     .main-task-header .add-task,
     .calendar-nav-today
   ):hover {
-  border-color: var(--control-border) !important;
-  color: var(--control-text) !important;
-  background: var(--control-surface-hover) !important;
+  border-color: var(--control-primary-surface) !important;
+  color: var(--control-primary-text) !important;
+  background: var(--control-primary-surface) !important;
 }
 
 /* Secondary actions share one quiet surface across layouts and themes. */
@@ -63,7 +60,9 @@
   :is(
     .cancel-button,
     .pomodoro-reset,
-    .calendar-clear-all,
+    .calendar-tray-clear,
+    .calendar-canvas-task-toggle,
+    .calendar-view-switch button,
     .folder-group-visibility-button,
     .urgent-repeat-filter,
     .theme-preset-button,
@@ -92,7 +91,9 @@
   :is(
     .cancel-button,
     .pomodoro-reset,
-    .calendar-clear-all,
+    .calendar-tray-clear,
+    .calendar-canvas-task-toggle,
+    .calendar-view-switch button,
     .folder-group-visibility-button,
     .urgent-repeat-filter,
     .theme-preset-button,
@@ -106,6 +107,48 @@
   border-color: var(--control-primary-surface) !important;
   color: var(--control-primary-text) !important;
   background: var(--control-primary-surface) !important;
+}
+
+.focusboard-shell.custom-theme .calendar-canvas-task-toggle[aria-expanded="true"] {
+  border-color: var(--control-border) !important;
+  color: var(--control-text) !important;
+  background: var(--control-surface) !important;
+}
+.focusboard-shell.custom-theme .calendar-canvas-task-toggle:hover {
+  border-color: var(--control-primary-surface) !important;
+  color: var(--control-primary-text) !important;
+  background: var(--control-primary-surface) !important;
+}
+
+.focusboard-shell.custom-theme .calendar-view-switch {
+  border: 0 !important;
+  background: transparent !important;
+}
+.focusboard-shell.custom-theme .calendar-nav {
+  border: 1px solid var(--control-border) !important;
+  background: var(--control-surface) !important;
+}
+.focusboard-shell.custom-theme .calendar-nav button {
+  border: 0 !important;
+  border-radius: 0;
+  color: var(--control-text) !important;
+  background: transparent !important;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+}
+.focusboard-shell.custom-theme .calendar-nav button:first-child {
+  border-right: 1px solid var(--control-border) !important;
+}
+.focusboard-shell.custom-theme .calendar-nav button:last-child {
+  border-left: 1px solid var(--control-border) !important;
+}
+.focusboard-shell.custom-theme .calendar-nav button:hover {
+  color: var(--control-primary-text) !important;
+  background: var(--control-primary-surface) !important;
+}
+.focusboard-shell.custom-theme .calendar-nav > span {
+  color: var(--control-text) !important;
 }
 
 .focusboard-shell.custom-theme .pomodoro-queue-action {
@@ -147,13 +190,18 @@
   place-items: center !important;
   padding: 0;
   line-height: 0 !important;
+  position: relative;
 }
 
 .focusboard-shell.custom-theme .task-delete-button svg {
-  display: block;
-  margin: 0;
-  /* The 1.8px strokes look right-heavy at this compact size; keep the glyph optically centered. */
-  transform: translateX(-1px);
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  width: 14px;
+  height: 14px;
+  margin: 0 !important;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
 }
 
 /* Complete is a compact task action, not an exception to the neutral controls. */
@@ -189,6 +237,9 @@
 
 /* Linked-task removal is an ordinary secondary action. */
 .focusboard-shell.custom-theme .pomodoro-clear-linked-task {
+  flex: 0 0 auto;
+  min-height: 30px;
+  padding: 6px 8px;
   border: 1px solid var(--control-border) !important;
   border-radius: 7px;
   color: var(--control-text) !important;
@@ -203,6 +254,13 @@
   border-color: var(--control-primary-surface) !important;
   color: var(--control-primary-text) !important;
   background: var(--control-primary-surface) !important;
+}
+
+/* Queue removal stays anchored to its task card, despite the shared icon-button geometry. */
+.focusboard-shell.custom-theme .pomodoro-queue-remove-button {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
 }
 
 /* Folder-menu labels and their controls follow the same hover language as menu buttons. */
@@ -313,26 +371,21 @@
   background: var(--control-primary-surface) !important;
 }
 
-/* The utility timer is a compact version of the primary action, not a borderless exception. */
+/* The utility timer uses the same neutral resting state as all other actions. */
 .focusboard-shell.custom-theme .timer button {
   width: 26px;
   height: 26px;
-  border: 1px solid
-    color-mix(
-      in srgb,
-      var(--control-primary-text) 42%,
-      var(--control-primary-surface) 58%
-    ) !important;
+  border: 1px solid var(--control-border) !important;
   border-radius: 6px;
-  color: var(--control-primary-text) !important;
-  background: var(--control-primary-surface) !important;
+  color: var(--control-text) !important;
+  background: var(--control-surface) !important;
   font-size: 10px;
 }
 
 .focusboard-shell.custom-theme .timer button:hover {
-  border-color: var(--control-border) !important;
-  color: var(--control-text) !important;
-  background: var(--control-surface-hover) !important;
+  border-color: var(--control-primary-surface) !important;
+  color: var(--control-primary-text) !important;
+  background: var(--control-primary-surface) !important;
 }
 
 /* Page links stay prominent without turning the sidebar into a stack of cards. */
@@ -444,6 +497,14 @@
   background: var(--control-primary-surface) !important;
 }
 
+/* Picker labels must follow the shared inverse hover treatment in light themes. */
+.focusboard-shell.custom-theme.light-theme
+  .kanban-task-picker
+  .folder-task-picker-trigger:is(:hover, [aria-expanded="true"])
+  > span {
+  color: var(--control-primary-text) !important;
+}
+
 .focusboard-shell.custom-theme .kanban-task-picker .folder-task-picker-menu {
   top: calc(100% + 6px);
   right: 0;
@@ -454,6 +515,41 @@
 .focusboard-shell.custom-theme :is(button, input, select, textarea):disabled {
   cursor: not-allowed;
   opacity: 0.52;
+}
+
+/* Counters use their own high-contrast badge treatment in every preset. */
+.focusboard-shell.custom-theme
+  :is(
+    .urgent-section header > span,
+    .urgent-heading-actions > span,
+    .column-header > span,
+    .folder-dropzone header > span:last-child,
+    .today-completed-section header > span,
+    .permanent-completed-section header > span
+  ) {
+  border: 1px solid var(--counter-border) !important;
+  color: var(--counter-text) !important;
+  background: var(--counter-surface) !important;
+}
+
+.focusboard-shell.custom-theme
+  .navigation
+  .nav-folder-item:not(.sidebar-folder-empty)
+  > b,
+.focusboard-shell.custom-theme
+  .navigation
+  .nav-item:not(.nav-folder-item)
+  > b:not(:empty) {
+  display: grid;
+  min-width: 19px;
+  height: 19px;
+  place-items: center;
+  border: 1px solid var(--counter-border);
+  border-radius: 50%;
+  color: var(--counter-text) !important;
+  background: var(--counter-surface);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
 }
 
 @media (max-width: 520px) {

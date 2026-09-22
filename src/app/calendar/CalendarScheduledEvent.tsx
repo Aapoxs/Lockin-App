@@ -29,6 +29,7 @@ export function CalendarScheduledEvent({
   return (
     <article
       className={`scheduled-event${isHighlighted ? " scheduled-event-highlighted" : ""}${isComplete ? " scheduled-event-completed" : ""}`}
+      data-calendar-touch-entry-id={entry.id}
       style={{ "--task-folder-color": color } as CSSProperties}
       draggable={!entry.id.startsWith("recurring:")}
       onDragStart={onDragStart}

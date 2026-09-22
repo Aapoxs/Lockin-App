@@ -16,6 +16,7 @@ type CalendarTrayProps = {
   activeTasks: Task[];
   tasks: Task[];
   onSelectFolder: (folder: Destination | null) => void;
+  onClearCalendar: () => void;
   onDropToFolder: (event: DragEvent<HTMLElement>, destination: Destination) => void;
   onDragTaskStart: (event: DragEvent<HTMLElement>, taskId: string) => void;
   onDragTaskEnd: () => void;
@@ -33,6 +34,7 @@ export function CalendarTray({
   activeTasks,
   tasks,
   onSelectFolder,
+  onClearCalendar,
   onDropToFolder,
   onDragTaskStart,
   onDragTaskEnd,
@@ -42,34 +44,37 @@ export function CalendarTray({
 }: CalendarTrayProps) {
   if (selectedFolder === null) {
     return (
-      <aside className="calendar-tray" aria-label="Tasks to schedule">
-        <h2>Task folders</h2>
-        <p>
-          Choose a folder to schedule tasks, or drop a scheduled task here to return it.
-        </p>
-        <button
-          type="button"
-          onClick={() => onSelectFolder("Main")}
-          onDragOver={(event) => event.preventDefault()}
-          onDrop={(event) => onDropToFolder(event, "Main")}
-        >
-          Main <span>{mainTaskCount}</span>
-        </button>
-        {folders.map((folder) => (
+      <aside className="calendar-tray" aria-label="Tasks to schedule" key="folders">
+        <div className="calendar-tray-folder-options folder-task-picker-options">
           <button
+            className="folder-task-picker-option folder-task-picker-folder-option"
             type="button"
-            key={folder.id}
-            onClick={() => onSelectFolder(folder.id)}
+            onClick={() => onSelectFolder("Main")}
             onDragOver={(event) => event.preventDefault()}
-            onDrop={(event) => onDropToFolder(event, folder.id)}
+            onDrop={(event) => onDropToFolder(event, "Main")}
           >
-            <i style={{ background: folder.color }} />
-            {folder.name}{" "}
-            <span>
-              {activeTasks.filter((task) => task.destination === folder.id).length}
-            </span>
+            <i className="calendar-tray-main-dot" />
+            <span>Main</span>
+            <b>{mainTaskCount}</b>
           </button>
-        ))}
+          {folders.map((folder) => (
+            <button
+              className="folder-task-picker-option folder-task-picker-folder-option"
+              type="button"
+              key={folder.id}
+              onClick={() => onSelectFolder(folder.id)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => onDropToFolder(event, folder.id)}
+            >
+              <i style={{ background: folder.color }} />
+              <span>{folder.name}</span>
+              <b>{activeTasks.filter((task) => task.destination === folder.id).length}</b>
+            </button>
+          ))}
+        </div>
+        <button className="calendar-tray-clear" type="button" onClick={onClearCalendar}>
+          Clear calendar
+        </button>
       </aside>
     );
   }
@@ -81,7 +86,7 @@ export function CalendarTray({
   const folderTasks = tasks.filter((task) => task.destination === selectedFolder);
 
   return (
-    <aside className="calendar-tray" aria-label="Tasks to schedule">
+    <aside className="calendar-tray" aria-label="Tasks to schedule" key={selectedFolder}>
       <button
         className="calendar-tray-back"
         type="button"
@@ -92,10 +97,13 @@ export function CalendarTray({
       <h2>{folderName}</h2>
       <p>
         {calendarView === "week"
-          ? "Set Repeat and Ends before dragging a task into a slot. Those settings apply to the new series only; existing series remain unchanged."
-          : "Drag a task onto a day to add it at 06:00. Repeat settings apply to the new series only."}
+          ? "Drag a task into a time slot. Repeat applies to the new series."
+          : calendarView === "month"
+            ? "Drag a task onto a day to add it at 06:00."
+            : "Switch to Week or Month to schedule a task."}
       </p>
       <div
+        className="calendar-tray-task-options"
         onDragOver={(event) => event.preventDefault()}
         onDrop={(event) => onDropToFolder(event, selectedFolder)}
       >
@@ -103,13 +111,16 @@ export function CalendarTray({
           <article
             className="calendar-task"
             key={task.id}
+            data-calendar-touch-task-id={task.id}
             style={{ "--task-folder-color": getTaskColor(task) } as CSSProperties}
             draggable
             onDragStart={(event) => onDragTaskStart(event, task.id)}
             onDragEnd={onDragTaskEnd}
           >
             <strong>{task.title}</strong>
-            <span>{task.detail}</span>
+            {task.detail && task.detail !== "No note" && (
+              <span className="calendar-task-detail">{task.detail}</span>
+            )}
             <label
               className="calendar-repeat-control"
               onClick={(event) => event.stopPropagation()}
@@ -152,6 +163,9 @@ export function CalendarTray({
           </article>
         ))}
       </div>
+      <button className="calendar-tray-clear" type="button" onClick={onClearCalendar}>
+        Clear calendar
+      </button>
     </aside>
   );
 }

@@ -383,7 +383,7 @@
   gap: 16px;
 }
 .pomodoro-queue-section h2 {
-  margin: 3px 0 0;
+  margin: 0;
   color: #fff;
   font-size: 19px;
   letter-spacing: -0.02em;
@@ -528,11 +528,6 @@
   background: var(--theme-text) !important;
   border-color: var(--theme-text) !important;
 }
-.focusboard-shell.custom-theme.light-theme .pomodoro-clear-linked-task {
-  color: #fff !important;
-  background: color-mix(in srgb, var(--theme-text) 88%, #000 12%) !important;
-  border-color: color-mix(in srgb, var(--theme-text) 88%, #000 12%) !important;
-}
 .focusboard-shell.custom-theme :is(.pomodoro-options-trigger, .pomodoro-options-menu) {
   color: var(--theme-text) !important;
   background: color-mix(in srgb, var(--theme-main) 84%, var(--theme-text) 16%) !important;
@@ -548,26 +543,6 @@
 .focusboard-shell.custom-theme .pomodoro-options-menu label {
   color: var(--theme-text) !important;
 }
-.focusboard-shell.custom-theme.light-theme
-  :is(.pomodoro-options-trigger, .pomodoro-options-menu) {
-  color: #fff !important;
-  background: color-mix(in srgb, var(--theme-text) 88%, #000 12%) !important;
-  border-color: color-mix(in srgb, var(--theme-text) 88%, #000 12%) !important;
-}
-.focusboard-shell.custom-theme.light-theme .pomodoro-options-menu label {
-  color: #fff !important;
-}
-.focusboard-shell.custom-theme.light-theme
-  :is(
-    .pomodoro-clock .primary-action,
-    .pomodoro-current-task .task-complete-button,
-    .pomodoro-clear-linked-task
-  ) {
-  color: #fff !important;
-  background: color-mix(in srgb, var(--theme-text) 88%, #000 12%) !important;
-  border-color: color-mix(in srgb, var(--theme-text) 88%, #000 12%) !important;
-}
-
 .pomodoro-current-task {
   display: grid;
   justify-items: center;
@@ -719,6 +694,9 @@
 }
 @media (max-width: 620px) {
   .pomodoro-queue-section {
+    padding: 14px;
+  }
+  .pomodoro-task-panel {
     padding: 14px;
   }
   .pomodoro-queue-section > header {
