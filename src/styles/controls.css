@@ -21,12 +21,7 @@
 
 /* Direct actions share a neutral resting state; selected controls alone use the inverse treatment. */
 .focusboard-shell.custom-theme
-  :is(
-    .primary-action,
-    .folder-add-button,
-    .main-task-header .add-task,
-    .calendar-nav-today
-  ) {
+  :is(.primary-action, .folder-add-button, .main-task-header .add-task) {
   min-height: 38px;
   border: 1px solid var(--control-border) !important;
   border-radius: 7px;
@@ -44,12 +39,7 @@
 }
 
 .focusboard-shell.custom-theme
-  :is(
-    .primary-action,
-    .folder-add-button,
-    .main-task-header .add-task,
-    .calendar-nav-today
-  ):hover {
+  :is(.primary-action, .folder-add-button, .main-task-header .add-task):hover {
   border-color: var(--control-primary-surface) !important;
   color: var(--control-primary-text) !important;
   background: var(--control-primary-surface) !important;
@@ -61,7 +51,7 @@
     .cancel-button,
     .pomodoro-reset,
     .calendar-tray-clear,
-    .calendar-canvas-task-toggle,
+    .calendar-task-toggle,
     .calendar-view-switch button,
     .folder-group-visibility-button,
     .urgent-repeat-filter,
@@ -92,7 +82,7 @@
     .cancel-button,
     .pomodoro-reset,
     .calendar-tray-clear,
-    .calendar-canvas-task-toggle,
+    .calendar-task-toggle,
     .calendar-view-switch button,
     .folder-group-visibility-button,
     .urgent-repeat-filter,
@@ -109,12 +99,12 @@
   background: var(--control-primary-surface) !important;
 }
 
-.focusboard-shell.custom-theme .calendar-canvas-task-toggle[aria-expanded="true"] {
+.focusboard-shell.custom-theme .calendar-task-toggle[aria-expanded="true"] {
   border-color: var(--control-border) !important;
   color: var(--control-text) !important;
   background: var(--control-surface) !important;
 }
-.focusboard-shell.custom-theme .calendar-canvas-task-toggle:hover {
+.focusboard-shell.custom-theme .calendar-task-toggle:hover {
   border-color: var(--control-primary-surface) !important;
   color: var(--control-primary-text) !important;
   background: var(--control-primary-surface) !important;
@@ -147,10 +137,6 @@
   color: var(--control-primary-text) !important;
   background: var(--control-primary-surface) !important;
 }
-.focusboard-shell.custom-theme .calendar-nav > span {
-  color: var(--control-text) !important;
-}
-
 .focusboard-shell.custom-theme .pomodoro-queue-action {
   min-height: 38px;
   padding: 8px 10px;

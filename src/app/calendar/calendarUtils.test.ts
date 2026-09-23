@@ -5,6 +5,7 @@ import {
   calendarSeriesKey,
   isWithinRepeatLimit,
   repeatLimitEnd,
+  startOfThreeDayWindow,
   startOfWeek,
   toDateKey,
 } from "./calendarUtils";
@@ -33,6 +34,18 @@ const scheduledEntry: CalendarEntry = {
 describe("calendar utilities", () => {
   it("starts weeks on Monday", () => {
     expect(toDateKey(startOfWeek(new Date("2026-01-18T12:00:00")))).toBe("2026-01-12");
+  });
+
+  it("places a date in its three-day mobile calendar window", () => {
+    expect(toDateKey(startOfThreeDayWindow(new Date("2026-09-23T12:00:00")))).toBe(
+      "2026-09-21",
+    );
+    expect(toDateKey(startOfThreeDayWindow(new Date("2026-09-25T12:00:00")))).toBe(
+      "2026-09-24",
+    );
+    expect(toDateKey(startOfThreeDayWindow(new Date("2026-09-27T12:00:00")))).toBe(
+      "2026-09-27",
+    );
   });
 
   it("keeps a monthly series on the last valid day", () => {

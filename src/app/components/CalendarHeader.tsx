@@ -1,9 +1,11 @@
+import type { ReactNode } from "react";
 import type { CalendarView } from "../workspace/workspaceTypes";
 
 type CalendarHeaderProps = {
   calendarView: CalendarView;
   periodName: string;
   periodLabel: string;
+  taskToggle: ReactNode;
   onToday: () => void;
   onShiftPeriod: (direction: -1 | 1) => void;
   onViewChange: (view: CalendarView) => void;
@@ -13,6 +15,7 @@ export function CalendarHeader({
   calendarView,
   periodName,
   periodLabel,
+  taskToggle,
   onToday,
   onShiftPeriod,
   onViewChange,
@@ -23,9 +26,7 @@ export function CalendarHeader({
         <h1 id="calendar-page-title">Calendar</h1>
       </div>
       <div className="calendar-page-actions">
-        <button className="calendar-nav-today" type="button" onClick={onToday}>
-          Today
-        </button>
+        {taskToggle}
         <div className="calendar-nav" aria-label="Change calendar period">
           <button
             type="button"
@@ -34,7 +35,15 @@ export function CalendarHeader({
           >
             ‹ <span className="calendar-nav-word">Prev</span>
           </button>
-          <span aria-live="polite">{periodLabel}</span>
+          <button
+            className="calendar-nav-current"
+            type="button"
+            aria-label={`Go to today; showing ${periodLabel}`}
+            title="Go to today"
+            onClick={onToday}
+          >
+            {periodLabel}
+          </button>
           <button
             type="button"
             aria-label={`Next ${periodName}`}

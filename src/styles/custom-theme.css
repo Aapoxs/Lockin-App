@@ -857,7 +857,6 @@
 .focusboard-shell.custom-theme
   :is(
     .calendar-nav button,
-    .calendar-nav > span,
     .calendar-view-switch button,
     .timer,
     .timer strong,

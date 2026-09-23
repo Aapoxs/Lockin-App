@@ -1025,7 +1025,7 @@ kbd {
   border-right: 0;
   border-left: 1px solid #3f3f46;
 }
-.calendar-nav > span {
+.calendar-nav-current {
   min-width: 112px;
   padding: 0 9px;
   color: #fff;
@@ -1037,22 +1037,6 @@ kbd {
 .calendar-nav button:hover {
   color: #09090b;
   background: #fff;
-}
-.calendar-nav-today {
-  height: 30px;
-  padding: 0 10px;
-  border: 1px solid #fff;
-  border-radius: 7px;
-  color: #09090b;
-  background: #fff;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.calendar-nav-today:hover {
-  color: #fff;
-  background: #27272a;
 }
 .calendar-task-toggle {
   display: grid;
@@ -1066,15 +1050,6 @@ kbd {
 }
 .calendar-canvas {
   position: relative;
-}
-.calendar-canvas-task-toggle {
-  position: absolute;
-  z-index: 3;
-  top: 7px;
-  left: 7px;
-  width: 34px;
-  height: 34px;
-  background: #18181b;
 }
 .calendar-task-toggle:hover,
 .calendar-task-toggle[aria-expanded="true"] {
@@ -1222,14 +1197,6 @@ kbd {
 .week-corner {
   position: relative;
   background: #e8f0ea;
-}
-.week-corner .calendar-task-toggle {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  width: 34px;
-  height: 34px;
-  background: #18181b;
 }
 .week-day-label {
   position: relative;

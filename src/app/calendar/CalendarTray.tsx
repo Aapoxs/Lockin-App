@@ -118,6 +118,11 @@ export function CalendarTray({
             onDragEnd={onDragTaskEnd}
           >
             <strong>{task.title}</strong>
+            {calendarView !== "year" && (
+              <span className="calendar-touch-drag-handle" aria-hidden="true">
+                ⠿
+              </span>
+            )}
             {task.detail && task.detail !== "No note" && (
               <span className="calendar-task-detail">{task.detail}</span>
             )}

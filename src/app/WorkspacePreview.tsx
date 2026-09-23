@@ -21,6 +21,7 @@ import {
   groupCalendarEntriesBySeries,
   isWithinRepeatLimit,
   normalizeScheduledAt,
+  startOfThreeDayWindow,
   startOfWeek,
   toDateKey,
 } from "./calendar/calendarUtils";
@@ -108,6 +109,18 @@ const normalizeTaskNote = (value: string) =>
     .join("\n")
     .slice(0, maxTaskNoteLength);
 
+const pageFromLocation = (): Page => {
+  const hash = window.location.hash.slice(1);
+  if (
+    hash === "calendar" ||
+    hash === "pomodoro" ||
+    hash === "kanban" ||
+    hash === "completed"
+  )
+    return hash;
+  return "main";
+};
+
 type CalendarTouchDrag = {
   source: HTMLElement;
   taskId?: string;
@@ -119,6 +132,10 @@ type CalendarTouchDrag = {
   timer: number | null;
   preview: HTMLDivElement | null;
   dropTarget: HTMLElement | null;
+  preventScroll: ((event: Event) => void) | null;
+  edgeDirection: -1 | 0 | 1;
+  edgeScrollFrame: number | null;
+  scrollSnapType: string | null;
 };
 
 export function WorkspacePreview() {
@@ -126,9 +143,15 @@ export function WorkspacePreview() {
   const [tasks, setTasks] = useState(initialTasks);
   const [calendarEntries, setCalendarEntries] = useState<CalendarEntry[]>([]);
   const [folders, setFolders] = useState(initialFolders);
-  const [activePage, setActivePage] = useState<Page>("main");
+  const [activePage, setActivePage] = useState<Page>(pageFromLocation);
   const [calendarView, setCalendarView] = useState<CalendarView>("week");
-  const [calendarDate, setCalendarDate] = useState(() => new Date());
+  const [isCompactCalendar, setIsCompactCalendar] = useState(
+    () => window.matchMedia("(max-width: 620px)").matches,
+  );
+  const [calendarDate, setCalendarDate] = useState(() =>
+    isCompactCalendar ? startOfThreeDayWindow(new Date()) : new Date(),
+  );
+  const [calendarScrollDayOffset, setCalendarScrollDayOffset] = useState(0);
   const [highlightedCalendarEntryId, setHighlightedCalendarEntryId] = useState<
     string | null
   >(null);
@@ -210,7 +233,45 @@ export function WorkspacePreview() {
   const backupInputRef = useRef<HTMLInputElement>(null);
   const draggedTaskIdRef = useRef<string | null>(null);
   const calendarTouchDragRef = useRef<CalendarTouchDrag | null>(null);
+  const calendarGridScrollRef = useRef<HTMLDivElement>(null);
+  const calendarScrollTimerRef = useRef<number | null>(null);
   const folderGroupButtonFlashTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    const syncPageWithLocation = () => setActivePage(pageFromLocation());
+    window.addEventListener("hashchange", syncPageWithLocation);
+    window.addEventListener("popstate", syncPageWithLocation);
+    return () => {
+      window.removeEventListener("hashchange", syncPageWithLocation);
+      window.removeEventListener("popstate", syncPageWithLocation);
+    };
+  }, []);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 620px)");
+    const syncCalendarWidth = (event: MediaQueryListEvent) => {
+      setIsCompactCalendar(event.matches);
+      if (event.matches && calendarView === "week")
+        setCalendarDate((current) => startOfThreeDayWindow(current));
+    };
+    media.addEventListener("change", syncCalendarWidth);
+    return () => media.removeEventListener("change", syncCalendarWidth);
+  }, [calendarView]);
+
+  useEffect(() => {
+    if (calendarScrollTimerRef.current !== null)
+      window.clearTimeout(calendarScrollTimerRef.current);
+    if (calendarGridScrollRef.current) calendarGridScrollRef.current.scrollLeft = 0;
+    setCalendarScrollDayOffset(0);
+  }, [activePage, calendarDate, calendarView, isCompactCalendar]);
+
+  useEffect(
+    () => () => {
+      if (calendarScrollTimerRef.current !== null)
+        window.clearTimeout(calendarScrollTimerRef.current);
+    },
+    [],
+  );
 
   // Load and persist the local workspace
   useEffect(() => {
@@ -620,7 +681,10 @@ export function WorkspacePreview() {
     if (!task) return;
     setCalendarEntries((current) => {
       if (!canScheduleTaskAt(taskId, scheduledAt, current)) return current;
-      return [...current, ...createCalendarEntries(task, scheduledAt, crypto.randomUUID)];
+      return [
+        ...current,
+        ...createCalendarEntries(task, scheduledAt, () => crypto.randomUUID()),
+      ];
     });
   };
 
@@ -843,7 +907,8 @@ export function WorkspacePreview() {
   };
 
   const openCalendarEntry = (entry: CalendarEntry) => {
-    setCalendarDate(new Date(entry.scheduledAt));
+    const date = new Date(entry.scheduledAt);
+    setCalendarDate(isCompactCalendar ? startOfThreeDayWindow(date) : date);
     setCalendarView("week");
     setActivePage("calendar");
     setHighlightedCalendarEntryId(entry.id);
@@ -857,13 +922,38 @@ export function WorkspacePreview() {
   };
 
   const shiftCalendarDate = (direction: -1 | 1) => {
+    const canvas = calendarGridScrollRef.current;
+    const dayWidth = canvas ? (canvas.clientWidth - 48) / 3 : 0;
+    const visibleDayOffset =
+      isCompactCalendar && calendarView === "week" && canvas && dayWidth > 0
+        ? Math.max(0, Math.min(4, Math.round(canvas.scrollLeft / dayWidth)))
+        : 0;
     setCalendarDate((current) => {
       const next = new Date(current);
-      if (calendarView === "week") next.setDate(next.getDate() + direction * 7);
+      if (calendarView === "week")
+        next.setDate(
+          next.getDate() + visibleDayOffset + direction * (isCompactCalendar ? 3 : 7),
+        );
       else if (calendarView === "month") next.setMonth(next.getMonth() + direction);
       else next.setFullYear(next.getFullYear() + direction);
       return next;
     });
+  };
+
+  const onCalendarGridScroll = () => {
+    if (!isCompactCalendar || calendarView !== "week") return;
+    if (calendarScrollTimerRef.current !== null)
+      window.clearTimeout(calendarScrollTimerRef.current);
+    calendarScrollTimerRef.current = window.setTimeout(() => {
+      const canvas = calendarGridScrollRef.current;
+      if (!canvas) return;
+      const dayWidth = (canvas.clientWidth - 48) / 3;
+      if (dayWidth <= 0) return;
+      setCalendarScrollDayOffset(
+        Math.max(0, Math.min(4, Math.round(canvas.scrollLeft / dayWidth))),
+      );
+      calendarScrollTimerRef.current = null;
+    }, 120);
   };
 
   const setCalendarSlotDragPreview = (event: DragEvent<HTMLElement>) => {
@@ -934,6 +1024,16 @@ export function WorkspacePreview() {
     const drag = calendarTouchDragRef.current;
     if (!drag) return;
     if (drag.timer !== null) window.clearTimeout(drag.timer);
+    if (drag.edgeScrollFrame !== null) window.cancelAnimationFrame(drag.edgeScrollFrame);
+    const canvas = calendarGridScrollRef.current;
+    if (canvas && drag.scrollSnapType !== null) {
+      const dayWidth = (canvas.clientWidth - (calendarView === "week" ? 48 : 0)) / 3;
+      canvas.style.scrollSnapType = drag.scrollSnapType;
+      if (dayWidth > 0)
+        canvas.scrollLeft = Math.round(canvas.scrollLeft / dayWidth) * dayWidth;
+    }
+    if (drag.preventScroll)
+      window.removeEventListener("touchmove", drag.preventScroll, true);
     drag.source.classList.remove("calendar-touch-source-dragging");
     drag.dropTarget?.classList.remove("calendar-touch-drop-target");
     drag.preview?.remove();
@@ -954,9 +1054,75 @@ export function WorkspacePreview() {
       : null;
   };
 
+  const updateCalendarTouchDropTarget = (drag: CalendarTouchDrag) => {
+    const target = calendarTouchDropTarget(drag, drag.x, drag.y);
+    if (target === drag.dropTarget) return;
+    drag.dropTarget?.classList.remove("calendar-touch-drop-target");
+    target?.classList.add("calendar-touch-drop-target");
+    drag.dropTarget = target;
+  };
+
+  const scrollCalendarAtDragEdge = (drag: CalendarTouchDrag) => {
+    drag.edgeScrollFrame = null;
+    const canvas = calendarGridScrollRef.current;
+    if (
+      calendarTouchDragRef.current !== drag ||
+      !drag.preview ||
+      !drag.edgeDirection ||
+      !canvas
+    )
+      return;
+    const before = canvas.scrollLeft;
+    canvas.scrollLeft += drag.edgeDirection * 4;
+    if (canvas.scrollLeft === before) return;
+    updateCalendarTouchDropTarget(drag);
+    drag.edgeScrollFrame = window.requestAnimationFrame(() =>
+      scrollCalendarAtDragEdge(drag),
+    );
+  };
+
+  const activateCalendarTouchDrag = (drag: CalendarTouchDrag) => {
+    if (calendarTouchDragRef.current !== drag || drag.preview) return;
+    if (drag.timer !== null) window.clearTimeout(drag.timer);
+    drag.timer = null;
+    const cell = document.querySelector<HTMLElement>(
+      calendarView === "month" ? ".month-day" : ".hour-slot",
+    );
+    if (!cell) return;
+    const bounds = cell.getBoundingClientRect();
+    const sourceStyle = getComputedStyle(drag.source);
+    const preview = document.createElement("div");
+    preview.className = "calendar-touch-drag-preview";
+    preview.textContent = drag.source.querySelector("strong")?.textContent ?? "Task";
+    preview.style.width = `${bounds.width}px`;
+    preview.style.height = `${bounds.height}px`;
+    preview.style.left = `${drag.x}px`;
+    preview.style.top = `${drag.y}px`;
+    preview.style.setProperty("--drag-preview-text", sourceStyle.color);
+    preview.style.setProperty("--drag-preview-background", sourceStyle.backgroundColor);
+    preview.style.setProperty("--drag-preview-border", sourceStyle.borderColor);
+    document.body.append(preview);
+    drag.preview = preview;
+    drag.preventScroll = (moveEvent) => {
+      if (calendarTouchDragRef.current === drag && moveEvent.cancelable)
+        moveEvent.preventDefault();
+    };
+    window.addEventListener("touchmove", drag.preventScroll, {
+      passive: false,
+      capture: true,
+    });
+    const canvas = calendarGridScrollRef.current;
+    if (isCompactCalendar && calendarView !== "year" && canvas) {
+      drag.scrollSnapType = canvas.style.scrollSnapType;
+      canvas.style.scrollSnapType = "none";
+    }
+    drag.source.classList.add("calendar-touch-source-dragging");
+  };
+
   const onCalendarTouchStart = (event: TouchEvent<HTMLElement>) => {
     if (event.touches.length !== 1 || !(event.target instanceof Element)) return;
-    if (event.target.closest("button, select, input, label")) return;
+    const isHandle = Boolean(event.target.closest(".calendar-touch-drag-handle"));
+    if (!isHandle && event.target.closest("button, select, input, label")) return;
     const source = event.target.closest<HTMLElement>(
       "[data-calendar-touch-task-id], [data-calendar-touch-entry-id]",
     );
@@ -974,31 +1140,14 @@ export function WorkspacePreview() {
       timer: null,
       preview: null,
       dropTarget: null,
+      preventScroll: null,
+      edgeDirection: 0,
+      edgeScrollFrame: null,
+      scrollSnapType: null,
     };
     calendarTouchDragRef.current = drag;
-    drag.timer = window.setTimeout(() => {
-      if (calendarTouchDragRef.current !== drag) return;
-      drag.timer = null;
-      const cell = document.querySelector<HTMLElement>(
-        calendarView === "month" ? ".month-day" : ".hour-slot",
-      );
-      if (!cell) return;
-      const bounds = cell.getBoundingClientRect();
-      const sourceStyle = getComputedStyle(source);
-      const preview = document.createElement("div");
-      preview.className = "calendar-touch-drag-preview";
-      preview.textContent = source.querySelector("strong")?.textContent ?? "Task";
-      preview.style.width = `${bounds.width}px`;
-      preview.style.height = `${bounds.height}px`;
-      preview.style.left = `${drag.x}px`;
-      preview.style.top = `${drag.y}px`;
-      preview.style.setProperty("--drag-preview-text", sourceStyle.color);
-      preview.style.setProperty("--drag-preview-background", sourceStyle.backgroundColor);
-      preview.style.setProperty("--drag-preview-border", sourceStyle.borderColor);
-      document.body.append(preview);
-      drag.preview = preview;
-      source.classList.add("calendar-touch-source-dragging");
-    }, 180);
+    if (isHandle) activateCalendarTouchDrag(drag);
+    else drag.timer = window.setTimeout(() => activateCalendarTouchDrag(drag), 150);
   };
 
   const onCalendarTouchMove = (event: TouchEvent<HTMLElement>) => {
@@ -1008,28 +1157,33 @@ export function WorkspacePreview() {
     drag.x = touch.clientX;
     drag.y = touch.clientY;
     if (!drag.preview) {
-      if (Math.hypot(drag.x - drag.startX, drag.y - drag.startY) > 10)
+      if (Math.hypot(drag.x - drag.startX, drag.y - drag.startY) > 16)
         clearCalendarTouchDrag();
       return;
     }
-    event.preventDefault();
     drag.preview.style.left = `${drag.x}px`;
     drag.preview.style.top = `${drag.y}px`;
 
-    const canvas = document.querySelector<HTMLElement>(".calendar-grid-scroll");
-    if (canvas) {
+    const canvas = calendarGridScrollRef.current;
+    drag.edgeDirection = 0;
+    if (isCompactCalendar && calendarView !== "year" && canvas) {
       const bounds = canvas.getBoundingClientRect();
-      if (drag.x > bounds.right - 36) canvas.scrollLeft += 12;
-      else if (drag.x < bounds.left + 36) canvas.scrollLeft -= 12;
+      if (
+        drag.y >= bounds.top &&
+        drag.y <= bounds.bottom &&
+        drag.x >= bounds.left &&
+        drag.x <= bounds.right &&
+        canvas.scrollWidth > canvas.clientWidth
+      ) {
+        if (drag.x >= bounds.right - 14) drag.edgeDirection = 1;
+        else if (drag.x <= bounds.left + 14) drag.edgeDirection = -1;
+      }
     }
-    if (drag.y < 70) window.scrollBy(0, -12);
-    else if (drag.y > window.innerHeight - 70) window.scrollBy(0, 12);
-
-    const target = calendarTouchDropTarget(drag, drag.x, drag.y);
-    if (target === drag.dropTarget) return;
-    drag.dropTarget?.classList.remove("calendar-touch-drop-target");
-    target?.classList.add("calendar-touch-drop-target");
-    drag.dropTarget = target;
+    if (drag.edgeDirection && drag.edgeScrollFrame === null)
+      drag.edgeScrollFrame = window.requestAnimationFrame(() =>
+        scrollCalendarAtDragEdge(drag),
+      );
+    updateCalendarTouchDropTarget(drag);
   };
 
   const onCalendarTouchEnd = (event: TouchEvent<HTMLElement>) => {
@@ -1406,7 +1560,11 @@ export function WorkspacePreview() {
   const pomodoroTasks = nonEventTasks;
   // The board is opt-in: tasks remain in their folders until added or focused.
   const kanbanTasks = nonEventTasks.filter((task) => task.isInKanban === true);
-  const weekStart = startOfWeek(calendarDate);
+  const weekStart = isCompactCalendar ? calendarDate : startOfWeek(calendarDate);
+  const weekLength = isCompactCalendar ? 3 : 7;
+  const visibleWeekStart = new Date(weekStart);
+  if (isCompactCalendar)
+    visibleWeekStart.setDate(visibleWeekStart.getDate() + calendarScrollDayOffset);
   const weekDays = Array.from({ length: 7 }, (_, index) => {
     const date = new Date(weekStart);
     date.setDate(weekStart.getDate() + index);
@@ -1507,12 +1665,18 @@ export function WorkspacePreview() {
   const numericMonthYear = (date: Date) => `${date.getMonth() + 1}.${date.getFullYear()}`;
   const calendarPeriodLabel =
     calendarView === "week"
-      ? `${numericDayMonth(weekStart)} - ${numericDayMonth(new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 6))}`
+      ? `${numericDayMonth(visibleWeekStart)} - ${numericDayMonth(new Date(visibleWeekStart.getFullYear(), visibleWeekStart.getMonth(), visibleWeekStart.getDate() + weekLength - 1))}`
       : calendarView === "month"
         ? numericMonthYear(monthStart)
         : `${numericMonthYear(yearMonths[0])} - ${numericMonthYear(yearMonths[11])}`;
   const calendarPeriodName =
-    calendarView === "week" ? "week" : calendarView === "month" ? "month" : "year";
+    calendarView === "week"
+      ? isCompactCalendar
+        ? "3 days"
+        : "week"
+      : calendarView === "month"
+        ? "month"
+        : "year";
   const selectedPomodoroTask = pomodoroTasks.find(
     (task) => task.id === selectedPomodoroTaskId,
   );
@@ -1707,7 +1871,7 @@ export function WorkspacePreview() {
   };
   const calendarTaskToggle = (
     <button
-      className="calendar-task-toggle calendar-canvas-task-toggle"
+      className="calendar-task-toggle calendar-header-task-toggle"
       type="button"
       aria-label={isCalendarTrayOpen ? "Close task folders" : "Open task folders"}
       title="Tasks to schedule"
@@ -2085,10 +2249,19 @@ export function WorkspacePreview() {
               calendarView={calendarView}
               periodName={calendarPeriodName}
               periodLabel={calendarPeriodLabel}
-              onToday={() => setCalendarDate(new Date())}
+              taskToggle={calendarTaskToggle}
+              onToday={() =>
+                setCalendarDate(
+                  isCompactCalendar && calendarView === "week"
+                    ? startOfThreeDayWindow(new Date())
+                    : new Date(),
+                )
+              }
               onShiftPeriod={shiftCalendarDate}
               onViewChange={(view) => {
                 setCalendarView(view);
+                if (view === "week" && isCompactCalendar)
+                  setCalendarDate((current) => startOfThreeDayWindow(current));
                 if (view === "year") setIsCalendarTrayOpen(false);
               }}
             />
@@ -2098,6 +2271,23 @@ export function WorkspacePreview() {
               onTouchMove={onCalendarTouchMove}
               onTouchEnd={onCalendarTouchEnd}
               onTouchCancel={clearCalendarTouchDrag}
+              onContextMenu={(event) => {
+                if (
+                  (!isCompactCalendar &&
+                    !window.matchMedia("(pointer: coarse)").matches) ||
+                  !(event.target instanceof Element)
+                )
+                  return;
+                if (event.target.closest("button, select, input, label")) return;
+                const source = event.target.closest<HTMLElement>(
+                  "[data-calendar-touch-task-id], [data-calendar-touch-entry-id]",
+                );
+                if (
+                  source &&
+                  !source.dataset.calendarTouchEntryId?.startsWith("recurring:")
+                )
+                  event.preventDefault();
+              }}
             >
               {isCalendarTrayOpen && (
                 <CalendarTray
@@ -2120,11 +2310,13 @@ export function WorkspacePreview() {
               <section className="calendar-canvas">
                 <div
                   className={`calendar-grid-scroll calendar-grid-scroll-${calendarView}`}
+                  ref={calendarGridScrollRef}
+                  onScroll={onCalendarGridScroll}
                   hidden={calendarView === "year"}
                 >
                   {calendarView === "week" && (
                     <div className="week-calendar">
-                      <div className="week-corner">{calendarTaskToggle}</div>
+                      <div className="week-corner" />
                       {weekDays.map((day) => (
                         <div className="week-day-label" key={day.key}>
                           {day.label}
@@ -2230,7 +2422,6 @@ export function WorkspacePreview() {
                     <div className="month-calendar">
                       {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
                         <b className="month-weekday-label" key={day}>
-                          {day === "Mon" && calendarTaskToggle}
                           {day}
                         </b>
                       ))}
@@ -2303,7 +2494,7 @@ export function WorkspacePreview() {
                 </div>
                 {calendarView === "year" && (
                   <div className="year-calendar">
-                    {yearMonths.map((month, index) => {
+                    {yearMonths.map((month) => {
                       const name = new Intl.DateTimeFormat(undefined, {
                         month: "long",
                         year: "numeric",
@@ -2314,7 +2505,6 @@ export function WorkspacePreview() {
                       ).length;
                       return (
                         <div key={name}>
-                          {index === 0 && calendarTaskToggle}
                           <h2>{name}</h2>
                           <p>
                             {count} {count === 1 ? "task" : "tasks"}

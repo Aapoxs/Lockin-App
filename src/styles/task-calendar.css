@@ -135,10 +135,17 @@
 .calendar-nav button:last-child {
   border-left: 1px solid #52525b;
 }
-.calendar-nav > span {
+.calendar-nav-current {
   min-width: 0;
   padding: 0 8px;
   font-variant-numeric: tabular-nums;
+}
+.calendar-header-task-toggle {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  min-height: 38px;
+  padding: 10px;
 }
 .calendar-view-switch {
   flex: 0 0 auto;
@@ -163,18 +170,6 @@
   background: transparent;
   overflow: visible;
 }
-.calendar-canvas-task-toggle {
-  position: absolute;
-  z-index: 3;
-  top: 4px;
-  left: 4px;
-  display: grid;
-  width: 34px;
-  height: 34px;
-  min-height: 0;
-  padding: 8px;
-  cursor: pointer;
-}
 .calendar-grid-scroll {
   min-width: 0;
   overflow-x: auto;
@@ -189,15 +184,10 @@
   min-width: 818px;
 }
 .month-weekday-label {
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 42px;
-}
-.year-calendar > div:first-child {
-  position: relative;
-  padding-left: 52px;
 }
 .calendar-workspace-tray-open {
   grid-template-columns: 284px minmax(0, 1fr);
@@ -241,6 +231,45 @@
 .calendar-task,
 .scheduled-event {
   touch-action: pan-y;
+}
+.calendar-task {
+  position: relative;
+}
+.calendar-task strong,
+.scheduled-event strong {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.calendar-task .calendar-touch-drag-handle {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  border-radius: 4px;
+  color: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.calendar-touch-drag-handle:active {
+  cursor: grabbing;
+}
+@media (max-width: 620px), (pointer: coarse) {
+  .calendar-task strong {
+    padding-right: 24px;
+  }
+  .calendar-task .calendar-touch-drag-handle {
+    display: grid;
+  }
 }
 .calendar-touch-source-dragging {
   opacity: 0.45;
@@ -423,11 +452,7 @@
     align-items: stretch;
     gap: 4px;
   }
-  .calendar-nav-today {
-    flex: 0 0 auto;
-    padding-inline: 7px;
-  }
-  .calendar-nav button,
+  .calendar-nav button:first-child,
   .calendar-nav button:last-child {
     width: 34px;
     padding: 0;
@@ -435,7 +460,7 @@
   .calendar-nav-word {
     display: none;
   }
-  .calendar-nav > span {
+  .calendar-nav-current {
     padding-inline: 5px;
     font-size: 10px;
   }
@@ -452,6 +477,7 @@
     scroll-snap-type: x mandatory;
   }
   .calendar-grid-scroll-week {
+    overflow-x: auto;
     scroll-padding-left: 48px;
   }
   .week-calendar {
@@ -459,6 +485,8 @@
     width: max-content;
     min-width: 0;
     overflow: visible;
+    border: 0;
+    border-radius: 0;
   }
   .week-day-label {
     scroll-snap-align: start;

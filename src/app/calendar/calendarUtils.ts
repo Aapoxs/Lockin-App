@@ -20,6 +20,13 @@ export const startOfWeek = (date: Date) => {
   return result;
 };
 
+export const startOfThreeDayWindow = (date: Date) => {
+  const start = startOfWeek(date);
+  const dayOfWeek = (date.getDay() + 6) % 7;
+  start.setDate(start.getDate() + Math.floor(dayOfWeek / 3) * 3);
+  return start;
+};
+
 export const normalizeScheduledAt = (value: string) =>
   value.replace(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}):00$/, "$1");
 
